@@ -1,0 +1,23 @@
+Start by making the size of the master window 1920 x 1080. 
+
+when I give you x and y coordinates for this I am giving you the top left corner
+
+Lets add two textboxes with dimensions H: 50, W: 330, The first textbox should be at position x: 70, y: 65 name the textbox: p2_dragon_health_textbox. The second  textbox should be at position x: 70, y: 970 name the textbox: p1_dragon_health_textbox.
+
+Lets add two square buttons with dimensions H: 376, W: 376, The first button should be at position x: 50, y: 133, lets name it p2_dragon_img. The second button should be at position x: 50, y: 576 lets name it p1_dragon_img.
+
+Next lets add two series of identical buttons, which we can add in two seperate grids. Each grid has 7 buttons of identical size and is a 1 row 7 columns. The size of each button in the grid is H: 127, W: 90. The coordinate of the first series of buttons is x: 493, y: 10, leave a gap between each button of a few pixels, and label each button p2_hand_1, p2_hand_2, p2_hand_3... and so on to p2_hand_7. The second series of buttons is almost identical to the first series of buttons, it also remains in a grid, of 1 row, 7 columns, with a button size of H:127, W:90, but this time our starting coordinate for this button series is x:493, y:946, and lets label the buttons p1_hand_1, p1_hand_2, p1_hand_3... and so on until p1_hand_7.
+
+Lets now make another series of buttons in a grid with 2 rows and 5 columns, this time each button is identical with H: 187, W:132, leave a few pixels to space out the grid of buttons, The starting coordinate of the first button is x: 476, y:143. For each button in row 1 lets name it p2_def_1, p2_def_2, ''_3, ''_4, and ''_5 keeping the naming system consistent, for row 2 of this grid, lets name the buttons, p2_atk_1, p2_atk_2, ''_3, ''_4, ''_5 again keeping the name consistent. 
+
+Lets now make another series of buttons in a grid with 2 rows and 5 columns, this time each button is identical with H: 187, W:132, leave a few pixels to space out the grid of buttons, The starting coordinate of the first button is x: 476, y: 552. For each button in row 1 lets name it p1_def_1, p1_def_2, ''_3, ''_4, and ''_5 keeping the naming system consistent, for row 2 of this grid, lets name the buttons, p1_atk_1, p1_atk_2, ''_3, ''_4, ''_5 again keeping the name consistent. 
+
+Lets add two more buttons with the same dimensions, H: 238, W: 168, with the first button starting at coordinate x: 1129, y: 274, and name the button p2_deck, the starting coordinate of the second button is x: 1229, y: 577, and name the button p1_deck. 
+
+Lets add a button with size: H: 545, W: 385, and a coordinate of x: 1518, y: 20, and lets name the button card_display. 
+
+Lets add a textbox with size, H: 167, W:385, and a coordinate of x: 1518, y: 589, and lets name the textbox card_description.
+
+Finally lets add one more button size H: 150, W: 350, and coordinates x: 1560, y: 921, and lets name the button end_turn
+
+
