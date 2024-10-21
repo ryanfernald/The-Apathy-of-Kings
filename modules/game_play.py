@@ -59,7 +59,8 @@ class GamePlay:
         print(f'Player 2 hand: {len(self.__player2_hand)}')
         print(f'Player 2 deck: {len(self.__player2_deck)}')
 
-class ImageMoverApp:
+# test case 
+class TestMoveImg:
     def __init__(self, root):
         self.root = root
         self.root.title('Image Display Test')
@@ -137,7 +138,7 @@ if __name__ == "__main__":
     root.mainloop()
 '''
 
-# test case to demonstrate dragging image around
+'''# test case to demonstrate dragging image around
 if __name__ == "__main__":
     root = tk.Tk()
     root.title('Image Display Test')
@@ -185,11 +186,14 @@ if __name__ == "__main__":
     canvas.tag_bind(image_id, "<Button-1>", start_drag)
     canvas.tag_bind(image_id, "<B1-Motion>", on_drag)
 
+    root.mainloop()'''
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = TestMoveImg(root)
     root.mainloop()
 
-
-
-    print('\n\n' +'-'*30 + '\n')
+    '''print('\n\n' +'-'*30 + '\n')
     show_card_list(game1.player1_hand)
     print('\n\n' +'-'*30 + '\n')
-    show_card_list(game1.player2_hand)
+    show_card_list(game1.player2_hand)'''
