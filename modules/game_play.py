@@ -1,8 +1,8 @@
-from modules import game_card as gc
-from modules import utility as util
 import tkinter as tk
 import random
 from PIL import Image, ImageTk
+import game_card as gc
+import utility as util
 
 class GamePlay:
 
@@ -110,8 +110,9 @@ def show_card_list(arg):
     for itr in arg:
         itr.display()
 
+'''# test case
 if __name__ == "__main__":
-    '''root = tk.Tk()
+    root = tk.Tk()
     root.title('Image Display Test')
     root.geometry("600x400")
     
@@ -121,7 +122,7 @@ if __name__ == "__main__":
     game1 = GamePlay()
     game1.displayGameInfo()
 
-
+    
     image = Image.open(game1.player1_hand[0].imgPath)
     resized_image = image.resize((150, 220), Image.LANCZOS)
     image = ImageTk.PhotoImage(resized_image)
@@ -129,17 +130,66 @@ if __name__ == "__main__":
     
     canvas.create_image(200, 200, image=image)
 
-    root.mainloop()'''
+    
 
-    root = tk.Tk()
+    
     app = ImageMoverApp(root)
+    root.mainloop()
+'''
+
+# test case to demonstrate dragging image around
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.title('Image Display Test')
+    root.geometry("600x400")
+    
+    # Create a canvas to display the image
+    canvas = tk.Canvas(root, width=600, height=400)
+    canvas.pack()
+    
+    # Initialize GamePlay and get card information
+    game1 = GamePlay()
+    game1.displayGameInfo()
+
+    # Load and resize the image for the card in player 1's hand
+    img_path = game1.player1_hand[0].imgPath
+    original_image = Image.open(img_path)
+    resized_image = original_image.resize((150, 220), Image.LANCZOS)
+    image = ImageTk.PhotoImage(resized_image)
+
+    # Keep a reference to the image to avoid garbage collection
+    root.image = image
+
+    # Create an image on the canvas
+    image_id = canvas.create_image(200, 200, image=image, anchor="nw")
+
+    # Functions for dragging the image
+    def start_drag(event):
+        # Record the starting point of the drag
+        start_drag.start_x = event.x
+        start_drag.start_y = event.y
+
+    def on_drag(event):
+        # Calculate the change in position
+        dx = event.x - start_drag.start_x
+        dy = event.y - start_drag.start_y
+
+        # Move the image by the delta
+        canvas.move(image_id, dx, dy)
+
+        # Update the starting point to the new position
+        start_drag.start_x = event.x
+        start_drag.start_y = event.y
+
+    # Bind mouse events for dragging the image
+    canvas.tag_bind(image_id, "<Button-1>", start_drag)
+    canvas.tag_bind(image_id, "<B1-Motion>", on_drag)
+
     root.mainloop()
 
 
 
-
-
-    '''print('\n\n' +'-'*30 + '\n')
+    print('\n\n' +'-'*30 + '\n')
     show_card_list(game1.player1_hand)
     print('\n\n' +'-'*30 + '\n')
-    show_card_list(game1.player2_hand)'''
+    show_card_list(game1.player2_hand)
