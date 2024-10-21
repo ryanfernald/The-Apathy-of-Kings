@@ -1,6 +1,6 @@
 import os
-import game_card as gc
 import tkinter as tk
+from modules import game_card as gc
 
 
 def load_cards_name_from_assets():

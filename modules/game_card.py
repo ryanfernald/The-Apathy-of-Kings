@@ -78,6 +78,12 @@ class GameCard:
         print(f'Name: {self.__name}')
         print(f'Type: {self.__type}')
 
+    def info(self):
+        res = []
+        res.append(f'Name: {self.__name}')
+        res.append(f'Type: {self.__type}')
+        return res
+
 class GameCardAtk(GameCard):
     def __init__(self, argString: str, argPath):
         temp = super().stateParsing(argString)
@@ -106,6 +112,15 @@ class GameCardAtk(GameCard):
         print(f'Element: {self.__element}')
         print(f'Attack: {self.__atk}')
         print(f'Defense: {self.__def}')
+    
+    def info(self):
+        res = []
+        res.extend(super().info())
+        res.append(f'Star: {self.__star}')
+        res.append(f'Element: {self.__element}')
+        res.append(f'Attack: {self.__atk}')
+        res.append(f'Defense: {self.__def}')
+        return res
 
 class GameCardSup(GameCard):
     def __init__(self, argString: str, argPath):
@@ -124,7 +139,13 @@ class GameCardDef(GameCard):
 
     def display(self):
         super().display()
-        print(f'Defense: {self.__def}') 
+        print(f'Defense: {self.__def}')
+    
+    def info(self):
+        res = []
+        res.extend(super().info())
+        res.append(f'Defense: {self.__def}')
+        return res
 
 # not sure use CardType or not for now
 class CardType(Enum):

@@ -1,7 +1,8 @@
-import game_card as gc
+from modules import game_card as gc
+from modules import utility as util
 import tkinter as tk
-import utility as util
 import random
+from PIL import Image, ImageTk
 
 class GamePlay:
 
@@ -58,6 +59,52 @@ class GamePlay:
         print(f'Player 2 hand: {len(self.__player2_hand)}')
         print(f'Player 2 deck: {len(self.__player2_deck)}')
 
+class ImageMoverApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title('Image Display Test')
+        self.root.geometry("600x400")
+        
+        # Create a canvas
+        self.canvas = tk.Canvas(root, width=600, height=400)
+        self.canvas.pack()
+        
+        # Initialize GamePlay and get card information
+        game1 = GamePlay()
+        game1.displayGameInfo()
+
+        # Load and resize the image for the card in player 1's hand
+        img_path = game1.player1_hand[0].imgPath
+        original_image = Image.open(img_path)
+        resized_image = original_image.resize((160, 240), Image.LANCZOS)
+        self.image = ImageTk.PhotoImage(resized_image)
+
+        # Keep a reference to the image to avoid garbage collection
+        self.root.image = self.image
+
+        # Add the image to the canvas
+        self.image_id = self.canvas.create_image(100, 100, image=self.image, anchor="nw")
+
+        # Bind mouse events for dragging
+        self.canvas.tag_bind(self.image_id, "<Button-1>", self.start_drag)
+        self.canvas.tag_bind(self.image_id, "<B1-Motion>", self.on_drag)
+
+    def start_drag(self, event):
+        # Record the starting point of the drag
+        self.start_x = event.x
+        self.start_y = event.y
+
+    def on_drag(self, event):
+        # Calculate the change in position
+        dx = event.x - self.start_x
+        dy = event.y - self.start_y
+
+        # Move the image by the delta
+        self.canvas.move(self.image_id, dx, dy)
+
+        # Update the starting point to the new position
+        self.start_x = event.x
+        self.start_y = event.y
 
 def show_card_list(arg):
     for itr in arg:
@@ -66,17 +113,33 @@ def show_card_list(arg):
 if __name__ == "__main__":
     '''root = tk.Tk()
     root.title('Image Display Test')
-    root.geometry("600x400")  '''
-
+    root.geometry("600x400")
+    
+    canvas = tk.Canvas(root, width=600, height=400)
+    canvas.pack()
     
     game1 = GamePlay()
     game1.displayGameInfo()
+
+
+    image = Image.open(game1.player1_hand[0].imgPath)
+    resized_image = image.resize((150, 220), Image.LANCZOS)
+    image = ImageTk.PhotoImage(resized_image)
+
+    
+    canvas.create_image(200, 200, image=image)
+
+    root.mainloop()'''
+
+    root = tk.Tk()
+    app = ImageMoverApp(root)
+    root.mainloop()
+
+
+
+
 
     '''print('\n\n' +'-'*30 + '\n')
     show_card_list(game1.player1_hand)
     print('\n\n' +'-'*30 + '\n')
     show_card_list(game1.player2_hand)'''
-
-    print(game1.player1_hand[0].imgPath)
-
-
