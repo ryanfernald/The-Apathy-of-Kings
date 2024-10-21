@@ -1,5 +1,6 @@
 import os
 import game_card as gc
+import tkinter as tk
 
 
 def load_cards_name_from_assets():
@@ -22,7 +23,7 @@ def load_cards_name_from_assets():
         as an attack card since it contains 6 attributes.
     """
     cur_dir = os.path.dirname(__file__)
-    folder_name = '\\assets\\'
+    folder_name = '\\assets\\cards\\'
     folder_path = cur_dir + folder_name
     atk_cards = []
     def_cards = []
@@ -33,13 +34,14 @@ def load_cards_name_from_assets():
             # if file extension is '.png' and extract card info
             if os.path.splitext(file)[1] == ".png":
                 card_str = os.path.splitext(file)[0]    # take file name without extension
+                file_path = os.path.join(root, file)
                 # based on different number of attribute to store different card
                 if len(card_str.split(',')) == 6:
-                    atk_cards.append(card_str)
+                    atk_cards.append((card_str, file_path))
                 elif len(card_str.split(',')) == 3:
-                    def_cards.append(card_str)
+                    def_cards.append((card_str, file_path))
                 elif len(card_str.split(',')) == 2:
-                    sup_cards.append(card_str)
+                    sup_cards.append((card_str, file_path))
     
     return atk_cards, def_cards, sup_cards
 
@@ -47,18 +49,38 @@ def display_card_list(card_list):
     var_name = [name for name, value in globals().items() if value is card_list][0]
     print('-' * 5 + f' list name: {var_name} ' + '-' * 5)
     print('-' * 5 + f'{len(card_list)} cards' + '-' * 5)
-    for itr in card_list:
+    for itr, _ in card_list:
         print(itr)
     print('-' * 15)
 
 def convert_to_atk_card(atk_cards):
-    game_card_atk = []
-    for itr in atk_cards:
-        game_card_atk.append(gc.GameCard(itr))
-    return game_card_atk
+    res = []
+    for itr, img_path in atk_cards:
+        res.append(gc.GameCardAtk(itr, img_path))
+    return res
+
+def convert_to_def_card(def_cards):
+    res = []
+    for itr, img_path in def_cards:
+        res.append(gc.GameCardDef(itr, img_path))
+    return res
+
+def convert_to_sup_card(sup_cards):
+    res = []
+    for itr, img_path in sup_cards:
+        res.append(gc.GameCardSup(itr, img_path))
+    return res
+
+def display_image(path):
+    pass
 
 # test
 if __name__ == "__main__":
+    root = tk.Tk()
+    root.title('Image Display Test')
+    root.geometry("600x400")  
+
+
     print('-' * 10 + ' Test ' + '-' * 10)
     
     '''
@@ -84,15 +106,36 @@ if __name__ == "__main__":
                     card_sup_list.append(card_str)
     '''
     
-    card_atk_list, card_def_list, card_sup_list = load_cards_name_from_assets()
+    '''card_atk_list, card_def_list, card_sup_list = load_cards_name_from_assets()
     
-    '''display_card_list(card_atk_list)
-    display_card_list(card_def_list)
-    display_card_list(card_sup_list)'''
+    #display_card_list(card_atk_list)
+    #display_card_list(card_def_list)
+    #display_card_list(card_sup_list)
 
     game_card_atk = convert_to_atk_card(card_atk_list)
     for itr in game_card_atk:
         itr.display()
-    #print(f'{len(card_atk_list)} vs {len(game_card_atk)}')
+    #print(f'{len(card_atk_list)} vs {len(game_card_atk)}')'''
+
+
+    '''cur_dir = os.path.dirname(__file__)
+    file_name = '\\assets\\bin\\card_back.png'
+    complete_path = cur_dir + file_name
+
+    try:
+        # Load the image using PhotoImage
+        img1 = tk.PhotoImage(file=complete_path)
+
+        # Create a Label to display the image
+        img_label = tk.Label(root, image=img1)
+        img_label.pack(expand=True)
+
+        print("Image loaded and displayed successfully.")
+    except Exception as e:
+        print("Error loading image:", e)'''
+    
+    
+
     print('-' * 10 + ' End ' + '-' * 10)
 
+    #root.mainloop()
