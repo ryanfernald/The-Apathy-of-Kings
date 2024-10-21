@@ -1,14 +1,14 @@
 import tkinter as tk
 import time
-from modules.button_clicks import deck_card_click, hand_card_click, atk_card_click, def_card_click, set_console, remove_message
-
+from modules.button_clicks import deck_card_click, hand_card_click, atk_card_click, def_card_click, set_console, remove_message, end_turn_click
+from modules.card_mgmt import CardManager
 
 
 class AoK:
     def __init__(self, master):
         master.title("The Apathy of Kings")
         master.configure(bg="dark grey")
-        master.geometry("1920x1080")
+        master.geometry("1600x1100")
 
         canvas = tk.Canvas(master)
         scrollbar_y = tk.Scrollbar(master, orient="vertical", command=canvas.yview)
@@ -33,56 +33,74 @@ class AoK:
         master.grid_rowconfigure(0, weight=1)
         master.grid_columnconfigure(0, weight=1)
 
+        self.card_manager = CardManager()
+
         # Enable touchpad scrolling on canvas
         canvas.unbind_all("<MouseWheel>")
         canvas.unbind_all("<Shift-MouseWheel>")
-        canvas.unbind_all("<Button-4>")
-        canvas.unbind_all("<Button-5>")
         
         # Enable touchpad scrolling on canvas (cross-platform)
         canvas.bind("<Enter>", lambda e: canvas.focus_set())
         canvas.bind("<MouseWheel>", lambda event: canvas.yview_scroll(-1 * int(event.delta / 120), "units"))
         canvas.bind("<Shift-MouseWheel>", lambda event: canvas.xview_scroll(-1 * int(event.delta / 120), "units"))
 
-        # Player 2 Hand Buttons (Row 0, Col 2-8)
-        for i in range(7):
-            button = tk.Button(scrollable_frame, height=8, width=12, text=f"p2_hand_{i+1}", bg="blue", bd=4, 
-                               command=lambda i=i: hand_card_click("P2", i+1), relief="solid")
-            button.grid(row=0, column=i+2, padx=2, pady=2)
+        # Hand buttons for Player 1 and Player 2
+        self.p1_hand_buttons = []
+        self.p2_hand_buttons = []
 
-        # Player 1 Hand Buttons (Row 6, Col 2-8)
+        # For Player 1 hand buttons
         for i in range(7):
-            button = tk.Button(scrollable_frame, height=8, width=12, text=f"p1_hand_{i+1}", bg="blue", bd=4, 
-                               command=lambda i=i: hand_card_click("P1", i+1), relief="solid")
-            button.grid(row=6, column=i+2, padx=2, pady=2)
+            p1_button = tk.Button(scrollable_frame, height=8, width=12, bg="blue", bd=4,
+                                command=lambda i=i: hand_card_click("P1", i+1, self.p1_atk_buttons, self.p1_def_buttons))
+            p1_button.grid(row=6, column=i+2, padx=2, pady=2)
+            self.p1_hand_buttons.append(p1_button)
+        # For Player 2 hand buttons
+        for i in range(7):
+            p2_button = tk.Button(scrollable_frame, height=8, width=12, bg="blue", bd=4,
+                                command=lambda i=i: hand_card_click("P2", i+1, self.p2_atk_buttons, self.p2_def_buttons))
+            p2_button.grid(row=0, column=i+2, padx=2, pady=2)
+            self.p2_hand_buttons.append(p2_button)
 
         # Player 2 Dragon Health Textbox (Row 1, Col 0-1)
         self.p2_drgn_health = tk.Text(scrollable_frame, height=8, width=24, bd=4, relief="solid")
         self.p2_drgn_health.grid(row=1, column=0, columnspan=2, padx=2, pady=2)
 
-        # Player 2 Defense Buttons (Row 1, Col 3-7)
-        for i in range(5):
-            button = tk.Button(scrollable_frame, height=12, width=16, text=f"p2_def_{i+1}", bg="orange", bd=4,
-                               command=lambda i=i: def_card_click("P2", i+1), relief="solid")
-            button.grid(row=1, column=i+3, padx=2, pady=2)
 
-        # Player 2 Attack Buttons (Row 2, Col 3-7)
-        for i in range(5):
-            button = tk.Button(scrollable_frame, height=12, width=16, text=f"p2_atk_{i+1}", bg="red", bd=4,
-                               command=lambda i=i: atk_card_click("P2", i+1), relief="solid")
-            button.grid(row=2, column=i+3, padx=2, pady=2)
+        # Attack and defense buttons for Player 1 (Row 4 and Row 5)
+        self.p1_atk_buttons = []
+        self.p1_def_buttons = []
 
-        # Player 1 Attack Buttons (Row 4, Col 3-7)
+        # Attack and defense buttons for Player 1 (Row 4 and Row 5)
         for i in range(5):
-            button = tk.Button(scrollable_frame, height=12, width=16, text=f"p1_atk_{i+1}", bg="green", bd=4,
-                               command=lambda i=i: atk_card_click("P1", i+1), relief="solid")
-            button.grid(row=4, column=i+3, padx=2, pady=2)
+            atk_button = tk.Button(scrollable_frame, height=12, width=16, bg="green", bd=4, relief="solid",
+                                command=lambda i=i: atk_card_click("P1", i+1, self.p1_atk_buttons))
+            atk_button.grid(row=4, column=i+3, padx=2, pady=2)
+            atk_button.image = None  # Initialize image attribute to None
+            self.p1_atk_buttons.append(atk_button)
 
-        # Player 1 Defense Buttons (Row 5, Col 3-7)
+            def_button = tk.Button(scrollable_frame, height=12, width=16, bg="yellow", bd=4, relief="solid",
+                                command=lambda i=i: def_card_click("P1", i+1, self.p1_def_buttons))
+            def_button.grid(row=5, column=i+3, padx=2, pady=2)
+            def_button.image = None  # Initialize image attribute to None
+            self.p1_def_buttons.append(def_button)
+
+        # Attack and defense buttons for Player 2 (Row 1 and Row 2)
+        self.p2_atk_buttons = []
+        self.p2_def_buttons = []
+
+        # Attack and defense buttons for Player 2 (Row 1 and Row 2)
         for i in range(5):
-            button = tk.Button(scrollable_frame, height=12, width=16, text=f"p1_def_{i+1}", bg="yellow", bd=4,
-                               command=lambda i=i: def_card_click("P1", i+1), relief="solid")
-            button.grid(row=5, column=i+3, padx=2, pady=2)
+            atk_button = tk.Button(scrollable_frame, height=12, width=16, bg="red", bd=4, relief="solid",
+                                command=lambda i=i: atk_card_click("P2", i+1, self.p2_atk_buttons))
+            atk_button.grid(row=2, column=i+3, padx=2, pady=2)
+            atk_button.image = None  # Initialize image attribute to None
+            self.p2_atk_buttons.append(atk_button)
+
+            def_button = tk.Button(scrollable_frame, height=12, width=16, bg="orange", bd=4, relief="solid",
+                                command=lambda i=i: def_card_click("P2", i+1, self.p2_def_buttons))
+            def_button.grid(row=1, column=i+3, padx=2, pady=2)
+            def_button.image = None  # Initialize image attribute to None
+            self.p2_def_buttons.append(def_button)
 
         # Player 1 Dragon Health Textbox (Row 5, Col 0-1)
         self.p1_drgn_health = tk.Text(scrollable_frame, height=8, width=24, bd=4, relief="solid")
@@ -96,14 +114,14 @@ class AoK:
         self.p1_drgn = tk.Button(scrollable_frame, height=12, width=24, text="p1_drgn", bg="grey", bd=4, relief="solid")
         self.p1_drgn.grid(row=4, column=0, columnspan=2, padx=2, pady=2)
 
-        # Player 2 Deck Button (Row 2, Col 9)
-        self.p2_deck = tk.Button(scrollable_frame, height=12, width=16, text="p2_deck", bg="maroon", bd=4,
-                                 command=lambda: deck_card_click("P2"), relief="solid")
+        # Deck button for Player 2 (Row 2, Col 9)
+        self.p2_deck = tk.Button(scrollable_frame, height=12, width=16, text="Deck", bg="maroon", bd=4,
+                                 command=lambda: deck_card_click("P2", self.p2_hand_buttons), relief="solid")
         self.p2_deck.grid(row=2, column=9, padx=2, pady=2)
 
-        # Player 1 Deck Button (Row 4, Col 9)
-        self.p1_deck = tk.Button(scrollable_frame, height=12, width=16, text="p1_deck", bg="maroon", bd=4,
-                                 command=lambda: deck_card_click("P1"), relief="solid")
+        # Deck button for Player 1 (Row 4, Col 9)
+        self.p1_deck = tk.Button(scrollable_frame, height=12, width=16, text="Deck", bg="maroon", bd=4,
+                                 command=lambda: deck_card_click("P1", self.p1_hand_buttons), relief="solid")
         self.p1_deck.grid(row=4, column=9, padx=2, pady=2)
 
         # Card Display Button (Row 0, Col 11-12, rowspan=3)
@@ -120,7 +138,8 @@ class AoK:
         remove_message()
 
         # End Turn Button (Row 6, Col 12)
-        self.end_turn = tk.Button(scrollable_frame, height=8, width=24, text="End Turn", bg="blue", bd=4, relief="solid")
+        self.end_turn = tk.Button(scrollable_frame, height=8, width=24, text="End Turn", bg="blue", bd=4,
+                                  command=end_turn_click, relief="solid")
         self.end_turn.grid(row=6, column=12, padx=2, pady=2)
 
 
