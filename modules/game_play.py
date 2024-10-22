@@ -64,48 +64,151 @@ class TestMoveImg:
     def __init__(self, root):
         self.root = root
         self.root.title('Image Display Test')
-        self.root.geometry("600x400")
+        self.root.geometry("1280x960")
         
-        # Create a canvas
-        self.canvas = tk.Canvas(root, width=600, height=400)
-        self.canvas.pack()
+        # Create a canvas 
+        self.canvas = tk.Canvas(root, width=780, height=960)
+        self.canvas.grid(row=0, column=0, rowspan=2, padx=10, pady=10)
         
+        # **Info panel to display selected card details (Card Image and Info)**
+        self.card_display_frame = tk.Frame(root, bg="lightgrey", width=480, height=720)
+        self.card_display_frame.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+
+        # **Add a label and canvas to display the card image**
+        self.card_image_label = tk.Label(self.card_display_frame, text="Card Image", bg="lightgrey")
+        self.card_image_label.pack()
+        self.card_image_canvas = tk.Canvas(self.card_display_frame, width=480, height=720, bg="white")
+        self.card_image_canvas.pack()
+
+        # **Add text widget to display card information**
+        self.card_info_text = tk.Text(self.card_display_frame, height=10, width=60)
+        self.card_info_text.pack()
+
         # Initialize GamePlay and get card information
         game1 = GamePlay()
         game1.displayGameInfo()
 
-        # Load and resize the image for the card in player 1's hand
-        img_path = game1.player1_hand[0].imgPath
+        # Store the image references in separate lists
+        self.hand_images = []  # For player1_hand images
+
+        self.image_idx = []
+        for itr, card in enumerate(game1.player1_hand):
+            size_w, size_h = 100, 150
+            # Load and resize the image for the card in player 1's hand
+            img_path = card.imgPath # game1.player1_hand[0].imgPath # single card demo change to multiple
+            original_image = Image.open(img_path)
+            resized_image = original_image.resize((size_w, size_h), Image.LANCZOS)
+            image = ImageTk.PhotoImage(resized_image)
+
+            # Keep a reference to the image to avoid garbage collection
+            self.hand_images.append(image)
+
+            # Add the image to the canvas, staggered to make each visible
+            x_position = 50 + itr * (size_w + 10)  # Stagger the cards horizontally
+            y_position = 100
+            image_id = self.canvas.create_image(x_position, y_position, image=image, anchor="nw")
+            self.image_idx.append(image_id)
+
+            # Bind mouse events for dragging using Helper class
+            self.canvas.tag_bind(image_id, "<Button-1>", lambda event: Helper.start_drag(event))
+            self.canvas.tag_bind(image_id, "<B1-Motion>", lambda event, img_id=image_id: Helper.on_drag(event, self.canvas, img_id))
+            # Bind right-click to display card information
+            self.canvas.tag_bind(image_id, "<Button-3>", lambda event, card=card: self.display_card_info(card))
+
+        self.deck_images = []  # For player1_deck images
+        # just an idea for deck card display
+        self.deck1_idx = []
+        for itr, card in enumerate(game1.player1_deck):
+            size_w, size_h = 100, 150
+            # Load and resize the image for the card in player 1's hand
+            img_path = card.imgPath # game1.player1_hand[0].imgPath # single card demo change to multiple
+            original_image = Image.open(img_path)
+            resized_image = original_image.resize((size_w, size_h), Image.LANCZOS)
+            image = ImageTk.PhotoImage(resized_image)
+
+            # Keep a reference to the image to avoid garbage collection
+            self.deck_images.append(image)
+
+            # Add the image to the canvas, staggered to make each visible
+            x_position = 50 + int(itr/2) * (1)  # stack all cards in deck for better visual
+            y_position = 400 - itr * (1)    # replace the image with card_back image
+            image_id = self.canvas.create_image(x_position, y_position, image=image, anchor="nw")
+            self.deck1_idx.append(image_id)
+
+            # Bind mouse events for dragging using Helper class
+            self.canvas.tag_bind(image_id, "<Button-1>", lambda event: Helper.start_drag(event))
+            self.canvas.tag_bind(image_id, "<B1-Motion>", lambda event, img_id=image_id: Helper.on_drag(event, self.canvas, img_id))
+            # Bind right-click to display card information
+            self.canvas.tag_bind(image_id, "<Button-3>", lambda event, card=card: self.display_card_info(card))
+
+    def display_card_info(self, game_card):
+        # Clear previous information
+        self.card_info_text.delete(1.0, tk.END)
+        self.card_image_canvas.delete("all")
+
+        # Display card information
+        card_info = game_card.info()
+        for itr in card_info:
+            self.card_info_text.insert(tk.END, itr + '\n')
+
+        # Load and display the card image
+        img_path = game_card.imgPath
         original_image = Image.open(img_path)
-        resized_image = original_image.resize((160, 240), Image.LANCZOS)
-        self.image = ImageTk.PhotoImage(resized_image)
+        resized_image = original_image.resize((440, 660), Image.LANCZOS)
+        self.card_image = ImageTk.PhotoImage(resized_image)
 
-        # Keep a reference to the image to avoid garbage collection
-        self.root.image = self.image
+        # Display the image on the canvas
+        self.card_image_canvas.create_image(240, 360, anchor="center", image=self.card_image)
 
-        # Add the image to the canvas
-        self.image_id = self.canvas.create_image(100, 100, image=self.image, anchor="nw")
+        # Keep a reference to avoid garbage collection
+        self.card_image_canvas.image = self.card_image
 
-        # Bind mouse events for dragging
-        self.canvas.tag_bind(self.image_id, "<Button-1>", self.start_drag)
-        self.canvas.tag_bind(self.image_id, "<B1-Motion>", self.on_drag)
-
-    def start_drag(self, event):
+class Helper:
+    # Static method to start the drag operation
+    @staticmethod
+    def start_drag(event):
         # Record the starting point of the drag
-        self.start_x = event.x
-        self.start_y = event.y
+        event.widget.start_x = event.x
+        event.widget.start_y = event.y
 
-    def on_drag(self, event):
+    # Static method to handle the dragging operation
+    @staticmethod
+    def on_drag(event, canvas, image_id):
         # Calculate the change in position
-        dx = event.x - self.start_x
-        dy = event.y - self.start_y
+        dx = event.x - event.widget.start_x
+        dy = event.y - event.widget.start_y
 
         # Move the image by the delta
-        self.canvas.move(self.image_id, dx, dy)
+        canvas.move(image_id, dx, dy)
 
         # Update the starting point to the new position
-        self.start_x = event.x
-        self.start_y = event.y
+        event.widget.start_x = event.x
+        event.widget.start_y = event.y
+
+    # Static method to display card information # did not work as expected
+    @staticmethod
+    def display_card_info(card_image_canvas, card_info_text, game_card):
+        # Clear previous information
+        card_info_text.delete(1.0, tk.END)
+        card_image_canvas.delete("all")
+
+        # Display card information
+        card_info = game_card.info()
+        for itr in card_info:
+            card_info_text.insert(tk.END, itr + '\n')
+
+        # Load and display the card image
+        img_path = game_card.imgPath
+        original_image = Image.open(img_path)
+        resized_image = original_image.resize((500, 750), Image.LANCZOS)
+        card_image = ImageTk.PhotoImage(resized_image)
+
+        # Display the image on the canvas
+        card_image_canvas.create_image(250, 375, anchor="center", image=card_image)
+
+        # Keep a reference to avoid garbage collection
+        card_image_canvas.image = card_image 
+
 
 def show_card_list(arg):
     for itr in arg:
