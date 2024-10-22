@@ -111,7 +111,7 @@ class TestMoveImg:
             x_position, y_position = GameGrid.PLAYER_HAND[itr]
             
 
-            image_id = self.canvas.create_image(x_position, y_position, image=image, anchor="nw")
+            image_id = self.canvas.create_image(x_position - size_w/2, y_position - size_h/2, image=image, anchor="nw")
             self.image_idx.append(image_id)
 
             # Bind mouse events for dragging using Helper class
@@ -193,15 +193,15 @@ class GameGrid:
             x.extend(x1)
             y.extend(y1)
         return x, y
-      
-
     
     @staticmethod
-    def layout_setup(arg, num, x, y, pad_x=0, pad_y=0):
-        arg = []
-        for itr in range(num):
-            temp = ((x + pad_x * itr), (y + pad_y * itr))
-            arg.append(temp)
+    def layout_setup():
+        GameGrid.PLAYER_HAND = []
+        size_w, size_h = 100, 150
+        x, y, pad_x, pad_y = 100, 700, 15, 0
+        for itr in range(7):
+            temp = ((x + (size_w + pad_x) * itr), (y + pad_y * itr))
+            GameGrid.PLAYER_HAND.append(temp)
 
 
 class Helper:
@@ -257,7 +257,7 @@ class Helper:
             if (abs(card_center_x - layout_x[itr]) <= GameGrid.X_THRESHOLD * 2 and
                     abs(card_center_y - layout_y[itr]) <= GameGrid.Y_THRESHOLD * 2):
                 # Snap the card image to the target coordinate by aligning its center
-                canvas.coords(image_id, layout_x[itr] - (x2 - x1), layout_y[itr] - (y2 - y1))
+                canvas.coords(image_id, layout_x[itr] - (x2 - x1)/2, layout_y[itr] - (y2 - y1)/2)
             
 
 
@@ -382,13 +382,8 @@ if __name__ == "__main__":
 
 
 if __name__ == "__main__":
-    #GameGrid.layout_setup(GameGrid.PLAYER_HAND, num=7, x=100, y=700, pad_x=15)
-    GameGrid.PLAYER_HAND = []
-    size_w, size_h = 100, 150
-    x, y, pad_x, pad_y = 100, 700, 15, 0
-    for itr in range(7):
-            temp = ((x + (size_w + pad_x) * itr), (y + pad_y * itr))
-            GameGrid.PLAYER_HAND.append(temp)
+    GameGrid.layout_setup()
+    
 
 
     root = tk.Tk()
