@@ -1,6 +1,8 @@
 import os
 import tkinter as tk
 import game_card as gc
+from PIL import Image, ImageTk
+
 
 
 def load_cards_name_from_assets():
@@ -74,6 +76,11 @@ def convert_to_sup_card(sup_cards):
 def display_image(path):
     pass
 
+def load_card_back():
+    img_path = 'd:\\Documents\\Code\\2024Fall\\CS122_Project\\The-Apathy-of-Kings-main\\modules\\assets\\bin\\card_back.png'
+    original_image = Image.open(img_path)
+    return original_image
+
 # test
 if __name__ == "__main__":
     root = tk.Tk()
@@ -83,59 +90,16 @@ if __name__ == "__main__":
 
     print('-' * 10 + ' Test ' + '-' * 10)
     
-    '''
-    cur_dir = os.path.dirname(__file__)
-    folder_name = '\\assets\\'
-    folder_path = cur_dir + folder_name
-    card_atk_list = []
-    card_def_list = []
-    card_sup_list = []
-    for root, dirs, files in os.walk(folder_path):
-        #print(f'root: {root}')
-        #print(f'dirs: {dirs}')
-        #print(f'files: {files}')
-        for file in files:
-            # if file extension is '.png' and extract card info
-            if os.path.splitext(file)[1] == ".png":
-                card_str = os.path.splitext(file)[0]
-                if len(card_str.split(',')) == 6:
-                    card_atk_list.append(card_str)
-                elif len(card_str.split(',')) == 3:
-                    card_def_list.append(card_str)
-                elif len(card_str.split(',')) == 2:
-                    card_sup_list.append(card_str)
-    '''
+    # Create a canvas 
+    root.canvas = tk.Canvas(root, width=1000, height=960)
+    root.canvas.grid(row=0, column=0, rowspan=2, padx=10, pady=10)
     
-    '''card_atk_list, card_def_list, card_sup_list = load_cards_name_from_assets()
-    
-    #display_card_list(card_atk_list)
-    #display_card_list(card_def_list)
-    #display_card_list(card_sup_list)
-
-    game_card_atk = convert_to_atk_card(card_atk_list)
-    for itr in game_card_atk:
-        itr.display()
-    #print(f'{len(card_atk_list)} vs {len(game_card_atk)}')'''
-
-
-    '''cur_dir = os.path.dirname(__file__)
-    file_name = '\\assets\\bin\\card_back.png'
-    complete_path = cur_dir + file_name
-
-    try:
-        # Load the image using PhotoImage
-        img1 = tk.PhotoImage(file=complete_path)
-
-        # Create a Label to display the image
-        img_label = tk.Label(root, image=img1)
-        img_label.pack(expand=True)
-
-        print("Image loaded and displayed successfully.")
-    except Exception as e:
-        print("Error loading image:", e)'''
-    
-    
+    size_w, size_h = 100, 150 # card size
+    original_image = load_card_back()
+    resized_image = original_image.resize((size_w, size_h), Image.LANCZOS)
+    image = ImageTk.PhotoImage(resized_image)
+    root.canvas.create_image(100, 100, image=image, anchor="nw")
 
     print('-' * 10 + ' End ' + '-' * 10)
 
-    #root.mainloop()
+    root.mainloop()
