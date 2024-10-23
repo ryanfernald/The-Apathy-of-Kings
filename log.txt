@@ -1,0 +1,70 @@
+### Initial Game Structure Design
+
+Created the GamePlay class to represent the core game logic.
+
+Declared attributes for player hands and decks.
+
+Implemented methods for adding cards, shuffling decks, and displaying game information.
+
+Integrated Python libraries such as Tkinter for UI elements and PIL for image processing.
+
+### Card Interaction Features
+
+Added the ability for users to view card images on the screen.
+
+Implemented drag-and-drop functionality to allow users to move cards.
+
+Enabled various mouse interactions, including right-click to display card details and double-click to flip a card.
+
+### Deck Cards Implementation
+
+Introduced cards with a back image that can be flipped to reveal the front image.
+
+Managed image references efficiently to prevent cards from disappearing due to garbage collection.
+
+### Bug Fixes and Improvements
+
+Fixed an issue where cards were not displaying correctly by ensuring consistent image reference handling.
+
+Improved the responsiveness of card dragging, ensuring cards could be freely moved even after snapping to a predefined position.
+
+### Snapping Functionality
+
+Implemented snapping functionality so that dragged cards snap to a target area if they are close enough.
+
+Addressed initial issues with cards getting locked, making the snapping behavior more intuitive and user-friendly.
+
+### Current Focus
+
+Optimizing the GamePlay class for better time efficiency and performance.
+
+Fine-tuning the user interface to improve the user experience.
+
+Preparing a complete game prototype by addressing remaining performance and interaction issues.
+
+
+
+
+
+
+
+
+
+
+
+
+##################### TO DO ##################### 
+
+re-arrange all helper function: put functions in correct named class
+
+when drag card overlap the 2 spot, it will lock into the last drawed. write a function that determin which spot overlap the most area and lock into it.
+
+may need re-structure a lot of functions especially action functions.
+
+develop action one card overlap another one to determin if it should be attack it.
+
+keep thinking about the structure of game, how to deal with seperating 2 players cards.
+
+
+
+
