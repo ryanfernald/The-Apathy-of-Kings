@@ -98,7 +98,7 @@ class TestMoveImg:
 
         self.image_idx = []
         for itr, card in enumerate(game1.player1_hand):
-            size_w, size_h = 100, 150
+            size_w, size_h = GameGrid.CARD_SIZE
             # Load and resize the image for the card in player 1's hand
             img_path = card.imgPath # game1.player1_hand[0].imgPath # single card demo change to multiple
             original_image = Image.open(img_path)
@@ -120,7 +120,7 @@ class TestMoveImg:
             # Bind mouse events for dragging using Helper class
             self.canvas.tag_bind(image_id, "<Button-1>", lambda event: Helper.start_drag(event))
             self.canvas.tag_bind(image_id, "<B1-Motion>", lambda event, img_id=image_id: Helper.on_drag(event, self.canvas, img_id))
-            self.canvas.tag_bind(image_id, "<ButtonRelease-1>", lambda event, img_id=image_id: Helper.on_release(event, self.canvas, img_id))
+            self.canvas.tag_bind(image_id, "<ButtonRelease-1>", lambda event, img_id=image_id, card=card: Helper.on_release(event, self.canvas, img_id, card))
             # Bind right-click to display card information
             self.canvas.tag_bind(
                 image_id,
@@ -128,37 +128,43 @@ class TestMoveImg:
                 lambda event, card=card: Helper.display_card_info(self.card_info_text, self.card_image_canvas, card)
             )   # Q: I try to take out event, but it will have issue without it. why?
 
+        self.image_back = util.load_card_back()
         self.deck_images = []  # For player1_deck images
+        self.deck_images_back = []
         # just an idea for deck card display
         self.deck1_idx = []
         for itr, card in enumerate(game1.player1_deck):
-            size_w, size_h = 100, 150
+            size_w, size_h = GameGrid.CARD_SIZE
             # Load and resize the image for the card in player 1's hand
-            #img_path = card.imgPath # game1.player1_hand[0].imgPath # single card demo change to multiple
-            original_image = util.load_card_back()  #Image.open(img_path)
+            img_path = card.imgPath # game1.player1_hand[0].imgPath # single card demo change to multiple
+            original_image = Image.open(img_path)
             resized_image = original_image.resize((size_w, size_h), Image.LANCZOS)
-            image = ImageTk.PhotoImage(resized_image)
+            card_image = ImageTk.PhotoImage(resized_image)
 
             # Keep a reference to the image to avoid garbage collection
-            self.deck_images.append(image)
+            self.deck_images.append(card_image)
+
+            self.deck_images_back.append(self.image_back)
 
             x, y = GameGrid.PLAYER1_DECK[0]
             # Add the image to the canvas, staggered to make each visible
             x_position = x + int(itr/3) * (0.5)  # stack all cards in deck for better visual
             y_position = y - itr * (0.5)    # replace the image with card_back image
-            image_id = self.canvas.create_image(x_position - size_w/2, y_position - size_h/2, image=image, anchor="nw")
+            image_id = self.canvas.create_image(x_position - size_w/2, y_position - size_h/2, image=self.image_back, anchor="nw")
             self.deck1_idx.append(image_id)
 
-            # Bind mouse events for dragging using Helper class
-            self.canvas.tag_bind(image_id, "<Button-1>", lambda event: Helper.start_drag(event))
-            self.canvas.tag_bind(image_id, "<B1-Motion>", lambda event, img_id=image_id: Helper.on_drag(event, self.canvas, img_id))
-            self.canvas.tag_bind(image_id, "<ButtonRelease-1>", lambda event, img_id=image_id: Helper.on_release(event, self.canvas, img_id))
-            # Bind right-click to display card information
-            self.canvas.tag_bind(
-                image_id,
-                "<Button-3>",
-                lambda event, card=card: Helper.display_card_info(self.card_info_text, self.card_image_canvas, card)
-            )
+            # # Bind mouse events for dragging using Helper class
+            # self.canvas.tag_bind(image_id, "<Button-1>", lambda event: Helper.start_drag(event))
+            # self.canvas.tag_bind(image_id, "<B1-Motion>", lambda event, img_id=image_id: Helper.on_drag(event, self.canvas, img_id))
+            # self.canvas.tag_bind(image_id, "<ButtonRelease-1>", lambda event, img_id=image_id: Helper.on_release(event, self.canvas, img_id))
+            # # Bind right-click to display card information
+            # self.canvas.tag_bind(
+            #     image_id,
+            #     "<Button-3>",
+            #     lambda event, card=card: Helper.display_card_info(self.card_info_text, self.card_image_canvas, card)
+            # )
+            # Bind double-click (left button) to turn the card over
+            self.canvas.tag_bind(image_id, "<Double-Button-1>", lambda event, card_image=card_image, img_id=image_id: Helper.turn_card(event, self.canvas, card_image, img_id))
 
 class GameGrid:
     TARGET_X = 500  # Example target x-coordinate
@@ -171,7 +177,7 @@ class GameGrid:
     Y_THRESHOLD = 75  # Distance threshold for snapping
     PLAYER1_HAND, PLAYER1_DECK, PLAYER1_ATK, PLAYER1_DEF = [], [], [], []
     PLAYER2_HAND, PLAYER2_DECK, PLAYER2_ATK, PLAYER2_DEF = [], [], [], []
-    COLOR_ATK, COLOR_DEF = '#FFD580', '#90EE90'
+    COLOR_ATK, COLOR_DEF = '#EB6E63', '#90EE90'
 
     @staticmethod
     def canvas_draw(canvas):
@@ -181,7 +187,7 @@ class GameGrid:
         canvas.create_rectangle(x - GameGrid.X_THRESHOLD, y - GameGrid.Y_THRESHOLD, x + GameGrid.X_THRESHOLD, y + GameGrid.Y_THRESHOLD, outline='black', fill=fill_color)
     @staticmethod
     def canvas_layout(canvas):
-        hand_x, hand_y = GameGrid.layout_all()
+        hand_x, hand_y = GameGrid.layout_player_section()
         for x, y in zip(hand_x, hand_y):
             GameGrid.canvas_draw(canvas, x, y)
 
@@ -201,8 +207,26 @@ class GameGrid:
     
     # get all spot into 2 list, make sure to add all spot list
     @staticmethod
-    def layout_all():
+    def layout_player_section():
         all = GameGrid.PLAYER1_HAND + GameGrid.PLAYER2_HAND + GameGrid.PLAYER1_DECK + GameGrid.PLAYER2_DECK
+        x = [x1 for x1, y1 in all]
+        y = [y1 for x1, y1 in all]
+        return x, y
+    @staticmethod
+    def layout_player_section_no_deck():
+        all = GameGrid.PLAYER1_HAND + GameGrid.PLAYER2_HAND
+        x = [x1 for x1, y1 in all]
+        y = [y1 for x1, y1 in all]
+        return x, y
+    @staticmethod
+    def layout_player_def():
+        all = GameGrid.PLAYER1_DEF + GameGrid.PLAYER2_DEF
+        x = [x1 for x1, y1 in all]
+        y = [y1 for x1, y1 in all]
+        return x, y
+    @staticmethod
+    def layout_player_atk():
+        all = GameGrid.PLAYER1_ATK + GameGrid.PLAYER2_ATK
         x = [x1 for x1, y1 in all]
         y = [y1 for x1, y1 in all]
         return x, y
@@ -295,25 +319,25 @@ class Helper:
         event.widget.start_y = event.y
 
     @staticmethod
-    def on_release(event, canvas, image_id):
+    def on_release(event, canvas, image_id, card):
         # After releasing the card, check if it needs to snap to a specific position
-        Helper.lock_location(canvas, image_id)
+        Helper.location_player_hand(canvas, image_id, GameGrid.layout_player_section_no_deck())
+        if card.type == gc.CardType.ATTACK:
+            Helper.location_player_hand(canvas, image_id, GameGrid.layout_player_atk())
+        if card.type == gc.CardType.DEFENSE:
+            Helper.location_player_hand(canvas, image_id, GameGrid.layout_player_def())
+        
 
     @staticmethod
-    def lock_location(canvas, image_id):
+    def location_player_hand(canvas, image_id, area):
         # Get the current position of the card
         x1, y1, x2, y2 = canvas.bbox(image_id)
         card_center_x = (x1 + x2) / 2
         card_center_y = (y1 + y2) / 2
 
         # need better name for variables    # replace these list to a list that contain all corrodinate
-        layout_x, layout_y = GameGrid.layout_all() #layout_x_y(GameGrid.PLAYER_HAND)
+        layout_x, layout_y = area #layout_x_y(GameGrid.PLAYER_HAND)
 
-        # # Check if the card is close to the target coordinate
-        # if (abs(card_center_x - GameGrid.TARGET_X) <= GameGrid.X_THRESHOLD * 2 and
-        #         abs(card_center_y - GameGrid.TARGET_Y) <= GameGrid.Y_THRESHOLD * 2):
-        #     # Snap the card image to the target coordinate by aligning its center
-        #     canvas.coords(image_id, GameGrid.TARGET_X - (x2 - x1) / 2, GameGrid.TARGET_Y - (y2 - y1) / 2)
         for itr in range(len(layout_x)):
             # Check if the card is close to the target coordinate
             if (abs(card_center_x - layout_x[itr]) <= GameGrid.X_THRESHOLD * 2 and
@@ -321,7 +345,25 @@ class Helper:
                 # Snap the card image to the target coordinate by aligning its center
                 canvas.coords(image_id, layout_x[itr] - (x2 - x1)/2, layout_y[itr] - (y2 - y1)/2)
             
+    @staticmethod
+    def turn_card(event, canvas, card_image, img_id):
+        """Method to turn over the card and display the real image."""
+        # Change the image of the card to the actual card image
+        canvas.itemconfig(img_id, image=card_image)
 
+        # Keep a reference to avoid garbage collection
+        canvas.image = card_image
+
+        # Bind mouse events for dragging using Helper class
+        canvas.tag_bind(img_id, "<Button-1>", lambda event: Helper.start_drag(event))
+        canvas.tag_bind(img_id, "<B1-Motion>", lambda event, img_id=img_id: Helper.on_drag(event, canvas, img_id))
+        canvas.tag_bind(img_id, "<ButtonRelease-1>", lambda event, img_id=img_id: Helper.on_release(event, canvas, img_id))
+        # Bind right-click to display card information
+        # canvas.tag_bind(
+        #     img_id,
+        #         "<Button-3>",
+        #         lambda event, card=card: Helper.display_card_info(self.card_info_text, self.card_image_canvas, card)
+        #     )
 
     # Static method to display card information # did not work as expected
     @staticmethod

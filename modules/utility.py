@@ -1,7 +1,9 @@
 import os
 import tkinter as tk
 import game_card as gc
+import game_play as gp
 from PIL import Image, ImageTk
+
 
 
 
@@ -77,9 +79,14 @@ def display_image(path):
     pass
 
 def load_card_back():
+    size_w, size_h = gp.GameGrid.CARD_SIZE
     img_path = 'd:\\Documents\\Code\\2024Fall\\CS122_Project\\The-Apathy-of-Kings-main\\modules\\assets\\bin\\card_back.png'
     original_image = Image.open(img_path)
-    return original_image
+    resized_image = original_image.resize((size_w, size_h), Image.LANCZOS)
+    image = ImageTk.PhotoImage(resized_image)
+    return image
+
+
 
 # test
 if __name__ == "__main__":
@@ -94,10 +101,11 @@ if __name__ == "__main__":
     root.canvas = tk.Canvas(root, width=1000, height=960)
     root.canvas.grid(row=0, column=0, rowspan=2, padx=10, pady=10)
     
-    size_w, size_h = 100, 150 # card size
-    original_image = load_card_back()
-    resized_image = original_image.resize((size_w, size_h), Image.LANCZOS)
-    image = ImageTk.PhotoImage(resized_image)
+    # size_w, size_h = 100, 150 # card size
+    # original_image = load_card_back()
+    # resized_image = original_image.resize((size_w, size_h), Image.LANCZOS)
+    # image = ImageTk.PhotoImage(resized_image)
+    image = load_card_back()
     root.canvas.create_image(100, 100, image=image, anchor="nw")
 
     print('-' * 10 + ' End ' + '-' * 10)

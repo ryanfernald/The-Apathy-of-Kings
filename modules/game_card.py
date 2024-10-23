@@ -168,6 +168,6 @@ if __name__ == "__main__":
     path1 = 'd:\\Documents\\Code\\2024Fall\\CS122_Project\\The-Apathy-of-Kings-main\\modules\\assets\\cards\\Fire Attack Cards\\Emberbloom,1,4,2,900,700.png'
     game_str = path1.split('\\')[-1]
     card1 = GameCardAtk(game_str, path1)
-    card1.display()
+    print(card1.type)
 
     print('-' * 10 + ' End ' + '-' * 10)
