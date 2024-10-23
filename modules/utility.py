@@ -1,11 +1,19 @@
 import os
 import tkinter as tk
+import sys
 import game_card as gc
 import game_play as gp
 from PIL import Image, ImageTk
 
 
-
+def resource_path(relative_path):
+        """"Get absolute path to resource, works for dev and for PyInstaller"""
+        try:
+            # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = sys. MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)
 
 def load_cards_name_from_assets():
     """
@@ -80,7 +88,8 @@ def display_image(path):
 
 def load_card_back():
     size_w, size_h = gp.GameGrid.CARD_SIZE
-    img_path = 'd:\\Documents\\Code\\2024Fall\\CS122_Project\\The-Apathy-of-Kings-main\\modules\\assets\\bin\\card_back.png'
+    img_path = resource_path("modules/assets/bin/card_back.png") 
+    
     original_image = Image.open(img_path)
     resized_image = original_image.resize((size_w, size_h), Image.LANCZOS)
     image = ImageTk.PhotoImage(resized_image)
