@@ -62,6 +62,8 @@ class GamePlay:
 # test case 
 class TestMoveImg:
     def __init__(self, root):
+        GameGrid.layout_setup()
+
         self.root = root
         self.root.title('Image Display Test')
         self.root.geometry("1500x960")
@@ -71,6 +73,7 @@ class TestMoveImg:
         self.canvas.grid(row=0, column=0, rowspan=2, padx=10, pady=10)
         #self.canvas.create_rectangle(GameGrid.TARGET_X - GameGrid.X_THRESHOLD, GameGrid.TARGET_Y - GameGrid.Y_THRESHOLD, GameGrid.TARGET_X + GameGrid.X_THRESHOLD, GameGrid.TARGET_Y + GameGrid.Y_THRESHOLD, outline='black', fill='#ADD8E6')
         GameGrid.canvas_layout(self.canvas)
+        GameGrid.canvas_battlefield(self.canvas)
 
         # **Info panel to display selected card details (Card Image and Info)**
         self.card_display_frame = tk.Frame(root, bg="lightgrey", width=480, height=720)
@@ -108,7 +111,7 @@ class TestMoveImg:
             # Add the image to the canvas, staggered to make each visible
             # x_position = 50 + itr * (size_w + 15)  # Stagger the cards horizontally
             # y_position = 100
-            x_position, y_position = GameGrid.PLAYER_HAND[itr]
+            x_position, y_position = GameGrid.PLAYER1_HAND[itr]
             
 
             image_id = self.canvas.create_image(x_position - size_w/2, y_position - size_h/2, image=image, anchor="nw")
@@ -123,7 +126,7 @@ class TestMoveImg:
                 image_id,
                 "<Button-3>",
                 lambda event, card=card: Helper.display_card_info(self.card_info_text, self.card_image_canvas, card)
-            )
+            )   # Q: I try to take out event, but it will have issue without it. why?
 
         self.deck_images = []  # For player1_deck images
         # just an idea for deck card display
@@ -139,10 +142,11 @@ class TestMoveImg:
             # Keep a reference to the image to avoid garbage collection
             self.deck_images.append(image)
 
+            x, y = GameGrid.PLAYER1_DECK[0]
             # Add the image to the canvas, staggered to make each visible
-            x_position = 50 + int(itr/3) * (0.5)  # stack all cards in deck for better visual
-            y_position = 400 - itr * (0.5)    # replace the image with card_back image
-            image_id = self.canvas.create_image(x_position, y_position, image=image, anchor="nw")
+            x_position = x + int(itr/3) * (0.5)  # stack all cards in deck for better visual
+            y_position = y - itr * (0.5)    # replace the image with card_back image
+            image_id = self.canvas.create_image(x_position - size_w/2, y_position - size_h/2, image=image, anchor="nw")
             self.deck1_idx.append(image_id)
 
             # Bind mouse events for dragging using Helper class
@@ -157,52 +161,110 @@ class TestMoveImg:
             )
 
 class GameGrid:
-    # Coordinates to lock the card image when it is close
     TARGET_X = 500  # Example target x-coordinate
     TARGET_Y = 500  # Example target y-coordinate
+    # Coordinates to the card image 
+    PLAYER1, PLAYER2 = (100, 80), (100, 860)   # player hand starting corrodinate
+    FIELD1_DEF, FIELD1_ATK, FIELD2_ATK, FIELD2_DEF = (150, 235), (150, 390), (150, 550), (150, 705)
+    CARD_SIZE = (100, 150)  # card size
     X_THRESHOLD = 50  # Distance threshold for snapping
     Y_THRESHOLD = 75  # Distance threshold for snapping
-    PLAYER_HAND = [(100, 700), (220, 700), (340, 700), (460, 700)]
+    PLAYER1_HAND, PLAYER1_DECK, PLAYER1_ATK, PLAYER1_DEF = [], [], [], []
+    PLAYER2_HAND, PLAYER2_DECK, PLAYER2_ATK, PLAYER2_DEF = [], [], [], []
+    COLOR_ATK, COLOR_DEF = '#FFD580', '#90EE90'
 
     @staticmethod
     def canvas_draw(canvas):
         canvas.create_rectangle(GameGrid.TARGET_X - GameGrid.X_THRESHOLD, GameGrid.TARGET_Y - GameGrid.Y_THRESHOLD, GameGrid.TARGET_X + GameGrid.X_THRESHOLD, GameGrid.TARGET_Y + GameGrid.Y_THRESHOLD, outline='black', fill='#ADD8E6')
     @staticmethod
-    def canvas_draw(canvas, x, y):
-        canvas.create_rectangle(x - GameGrid.X_THRESHOLD, y - GameGrid.Y_THRESHOLD, x + GameGrid.X_THRESHOLD, y + GameGrid.Y_THRESHOLD, outline='black', fill='#ADD8E6')
+    def canvas_draw(canvas, x, y, fill_color = '#ADD8E6'):
+        canvas.create_rectangle(x - GameGrid.X_THRESHOLD, y - GameGrid.Y_THRESHOLD, x + GameGrid.X_THRESHOLD, y + GameGrid.Y_THRESHOLD, outline='black', fill=fill_color)
     @staticmethod
     def canvas_layout(canvas):
-        hand_x, hand_y = GameGrid.layout_x_y(GameGrid.PLAYER_HAND)
+        hand_x, hand_y = GameGrid.layout_all()
+        for x, y in zip(hand_x, hand_y):
+            GameGrid.canvas_draw(canvas, x, y)
 
-        for itr in range(len(GameGrid.PLAYER_HAND)):
-            GameGrid.canvas_draw(canvas, hand_x[itr], hand_y[itr])
     @staticmethod
-    def layout_x_y(argList):
-        x, y = zip(*argList)
-        x = list(x)
-        y = list(y)
-        return x, y
+    def canvas_battlefield(canvas):
+        all = GameGrid.PLAYER1_ATK + GameGrid.PLAYER2_ATK
+        hand_x = [x1 for x1, y1 in all]
+        hand_y = [y1 for x1, y1 in all]
+        for x, y in zip(hand_x, hand_y):
+            GameGrid.canvas_draw(canvas, x, y, GameGrid.COLOR_ATK)
+
+        all = GameGrid.PLAYER1_DEF + GameGrid.PLAYER2_DEF
+        hand_x = [x1 for x1, y1 in all]
+        hand_y = [y1 for x1, y1 in all]
+        for x, y in zip(hand_x, hand_y):
+            GameGrid.canvas_draw(canvas, x, y, GameGrid.COLOR_DEF)
+    
+    # get all spot into 2 list, make sure to add all spot list
     @staticmethod
     def layout_all():
-        all = [GameGrid.PLAYER_HAND]
-        x, y = [], []
-        for itr in all:
-            x1, y1 = zip(*itr)
-            x1 = list(x1)
-            y1 = list(y1)
-            x.extend(x1)
-            y.extend(y1)
+        all = GameGrid.PLAYER1_HAND + GameGrid.PLAYER2_HAND + GameGrid.PLAYER1_DECK + GameGrid.PLAYER2_DECK
+        x = [x1 for x1, y1 in all]
+        y = [y1 for x1, y1 in all]
         return x, y
     
+    # must run to setup grid
     @staticmethod
     def layout_setup():
-        GameGrid.PLAYER_HAND = []
-        size_w, size_h = 100, 150
-        x, y, pad_x, pad_y = 100, 700, 15, 0
-        for itr in range(7):
-            temp = ((x + (size_w + pad_x) * itr), (y + pad_y * itr))
-            GameGrid.PLAYER_HAND.append(temp)
+        GameGrid.layout_setup_hand()
+        GameGrid.layout_setup_deck()
+        GameGrid.layout_setup_battlefield()
 
+    @staticmethod
+    def layout_setup_hand():
+        size_w, size_h = GameGrid.CARD_SIZE   # card size, should change upon resize window
+        pad_x, pad_y = 15, 0    # space between cards
+        num = 7 # number of card in hand
+        GameGrid.PLAYER1_HAND = []
+        x, y = GameGrid.PLAYER1
+        for itr in range(num):
+            temp = ((x + (size_w + pad_x) * itr), (y + pad_y * itr))
+            GameGrid.PLAYER1_HAND.append(temp)
+        GameGrid.PLAYER2_HAND = []
+        x, y = GameGrid.PLAYER2
+        for itr in range(num):
+            temp = ((x + (size_w + pad_x) * itr), (y + pad_y * itr))
+            GameGrid.PLAYER2_HAND.append(temp)
+
+    # relative to player hand corrodinate
+    @staticmethod
+    def layout_setup_deck():
+        size_w, size_h = GameGrid.CARD_SIZE   # card size, should change upon resize window
+        pad_x, pad_y = 40, 20    # space between cards and deck section
+        temp = ((GameGrid.PLAYER1_HAND[-1][0] + (size_w + pad_x)), (GameGrid.PLAYER1_HAND[-1][1] + pad_y))
+        GameGrid.PLAYER1_DECK.append(temp)
+        temp = ((GameGrid.PLAYER2_HAND[-1][0] + (size_w + pad_x)), (GameGrid.PLAYER2_HAND[-1][1] - pad_y))
+        GameGrid.PLAYER2_DECK.append(temp)
+
+    @staticmethod
+    def layout_setup_battlefield():
+        size_w, size_h = GameGrid.CARD_SIZE   # card size, should change upon resize window
+        pad_x, pad_y = 20, 0    # space between cards
+        num = 5 # number of card in hand
+        GameGrid.PLAYER1_ATK = []
+        x, y = GameGrid.FIELD1_ATK
+        for itr in range(num):
+            temp = ((x + (size_w + pad_x) * itr), (y + pad_y * itr))
+            GameGrid.PLAYER1_ATK.append(temp)
+        GameGrid.PLAYER1_DEF = []
+        x, y = GameGrid.FIELD1_DEF
+        for itr in range(num):
+            temp = ((x + (size_w + pad_x) * itr), (y + pad_y * itr))
+            GameGrid.PLAYER1_DEF.append(temp)
+        GameGrid.PLAYER2_ATK = []
+        x, y = GameGrid.FIELD2_ATK
+        for itr in range(num):
+            temp = ((x + (size_w + pad_x) * itr), (y + pad_y * itr))
+            GameGrid.PLAYER2_ATK.append(temp)
+        GameGrid.PLAYER2_DEF = []
+        x, y = GameGrid.FIELD2_DEF
+        for itr in range(num):
+            temp = ((x + (size_w + pad_x) * itr), (y + pad_y * itr))
+            GameGrid.PLAYER2_DEF.append(temp)
 
 class Helper:
     # Add a dictionary to track whether an image is locked or not
@@ -382,13 +444,11 @@ if __name__ == "__main__":
 
 
 if __name__ == "__main__":
-    GameGrid.layout_setup()
     
-
-
     root = tk.Tk()
     app = TestMoveImg(root)
     root.mainloop()
+
 
     
     
