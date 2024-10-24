@@ -164,7 +164,7 @@ class TestMoveImg:
             #     lambda event, card=card: Helper.display_card_info(self.card_info_text, self.card_image_canvas, card)
             # )
             # Bind double-click (left button) to turn the card over
-            self.canvas.tag_bind(image_id, "<Double-Button-1>", lambda event, card_image=card_image, img_id=image_id: Helper.turn_card(event, self.canvas, card_image, img_id))
+            self.canvas.tag_bind(image_id, "<Double-Button-1>", lambda event, card_image=card_image, img_id=image_id: Helper.turn_card(event, self.canvas, card_image, img_id, card))
 
 class GameGrid:
     TARGET_X = 500  # Example target x-coordinate
@@ -321,32 +321,44 @@ class Helper:
     @staticmethod
     def on_release(event, canvas, image_id, card):
         # After releasing the card, check if it needs to snap to a specific position
-        Helper.location_player_hand(canvas, image_id, GameGrid.layout_player_section_no_deck())
+        area = GameGrid.PLAYER1_HAND + GameGrid.PLAYER2_HAND
         if card.type == gc.CardType.ATTACK:
-            Helper.location_player_hand(canvas, image_id, GameGrid.layout_player_atk())
+            area.extend(GameGrid.PLAYER1_ATK + GameGrid.PLAYER2_ATK)
         if card.type == gc.CardType.DEFENSE:
-            Helper.location_player_hand(canvas, image_id, GameGrid.layout_player_def())
-        
+            area.extend(GameGrid.PLAYER1_DEF + GameGrid.PLAYER2_DEF)
+        Helper.location_auto_lockin(canvas, image_id, area)
+
 
     @staticmethod
-    def location_player_hand(canvas, image_id, area):
+    def location_auto_lockin(canvas, image_id, area):
         # Get the current position of the card
         x1, y1, x2, y2 = canvas.bbox(image_id)
         card_center_x = (x1 + x2) / 2
         card_center_y = (y1 + y2) / 2
 
-        # need better name for variables    # replace these list to a list that contain all corrodinate
-        layout_x, layout_y = area #layout_x_y(GameGrid.PLAYER_HAND)
+        # Find the closest area to the card's center
+        closest_area = None
+        min_distance = float('inf')
 
-        for itr in range(len(layout_x)):
-            # Check if the card is close to the target coordinate
-            if (abs(card_center_x - layout_x[itr]) <= GameGrid.X_THRESHOLD * 2 and
-                    abs(card_center_y - layout_y[itr]) <= GameGrid.Y_THRESHOLD * 2):
-                # Snap the card image to the target coordinate by aligning its center
-                canvas.coords(image_id, layout_x[itr] - (x2 - x1)/2, layout_y[itr] - (y2 - y1)/2)
-            
+        for (area_x, area_y) in area:
+            # Calculate the Euclidean distance from card center to each area's center
+            distance = (card_center_x - area_x) ** 2 + (card_center_y - area_y) ** 2
+            if distance < min_distance:
+                min_distance = distance
+                closest_area = (area_x, area_y)
+        #if closest_area:
+        if (abs(card_center_x - closest_area[0]) <= GameGrid.X_THRESHOLD * 2 and
+            abs(card_center_y - closest_area[1]) <= GameGrid.Y_THRESHOLD * 2):
+            # Snap the card image to the target coordinate by aligning its center
+            canvas.coords(image_id, closest_area[0] - (x2 - x1)/2, closest_area[1] - (y2 - y1)/2) 
+
+
     @staticmethod
-    def turn_card(event, canvas, card_image, img_id):
+    def distance(x1, y1, x2, y2):
+        return (x1 - x2) ** 2 + (y1 - y2) ** 2
+
+    @staticmethod
+    def turn_card(event, canvas, card_image, img_id, card):
         """Method to turn over the card and display the real image."""
         # Change the image of the card to the actual card image
         canvas.itemconfig(img_id, image=card_image)
@@ -357,7 +369,8 @@ class Helper:
         # Bind mouse events for dragging using Helper class
         canvas.tag_bind(img_id, "<Button-1>", lambda event: Helper.start_drag(event))
         canvas.tag_bind(img_id, "<B1-Motion>", lambda event, img_id=img_id: Helper.on_drag(event, canvas, img_id))
-        canvas.tag_bind(img_id, "<ButtonRelease-1>", lambda event, img_id=img_id: Helper.on_release(event, canvas, img_id))
+        #canvas.tag_bind(img_id, "<ButtonRelease-1>", lambda event, img_id=img_id: Helper.on_release(event, canvas, img_id))
+        canvas.tag_bind(img_id, "<ButtonRelease-1>", lambda event, img_id=img_id, card=card: Helper.on_release(event, canvas, img_id, card))
         # Bind right-click to display card information
         # canvas.tag_bind(
         #     img_id,
