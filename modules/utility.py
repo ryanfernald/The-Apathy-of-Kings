@@ -1,19 +1,14 @@
 import os
 import tkinter as tk
-import sys
 import game_card as gc
 import game_play as gp
+import game_grid as ggrid
 from PIL import Image, ImageTk
 
 
-def resource_path(relative_path):
-        """"Get absolute path to resource, works for dev and for PyInstaller"""
-        try:
-            # PyInstaller creates a temp folder and stores path in _MEIPASS
-            base_path = sys. MEIPASS
-        except Exception:
-            base_path = os.path.abspath(".")
-        return os.path.join(base_path, relative_path)
+
+def cur_dir():
+    return os.path.dirname(__file__)
 
 def load_cards_name_from_assets():
     """
@@ -66,30 +61,49 @@ def display_card_list(card_list):
     print('-' * 15)
 
 def convert_to_atk_card(atk_cards):
-    res = []
-    for itr, img_path in atk_cards:
-        res.append(gc.GameCardAtk(itr, img_path))
-    return res
+    """
+    Converts a list of attack card data into a list of GameCardAtk objects.
+    
+    Args:
+        atk_cards (list): A list of tuples where each tuple contains 
+                          (card info string, img_path) representing attack card data.
+                          
+    Returns:
+        list: A list of GameCardAtk objects.
+    """
+    return [gc.GameCardAtk(card_info, img_path) for card_info, img_path in atk_cards]
 
 def convert_to_def_card(def_cards):
-    res = []
-    for itr, img_path in def_cards:
-        res.append(gc.GameCardDef(itr, img_path))
-    return res
+    """
+    Converts a list of attack card data into a list of GameCardDef objects.
+    
+    Args:
+        def_cards (list): A list of tuples where each tuple contains 
+                          (card info string, img_path) representing attack card data.
+                          
+    Returns:
+        list: A list of GameCardDef objects.
+    """
+    return [gc.GameCardDef(card_info, img_path) for card_info, img_path in def_cards]
 
 def convert_to_sup_card(sup_cards):
-    res = []
-    for itr, img_path in sup_cards:
-        res.append(gc.GameCardSup(itr, img_path))
-    return res
-
-def display_image(path):
-    pass
-
-def load_card_back():
-    size_w, size_h = gp.GameGrid.CARD_SIZE
-    img_path = resource_path("modules/assets/bin/card_back.png") 
+    """
+    Converts a list of attack card data into a list of GameCardSup objects.
     
+    Args:
+        def_cards (list): A list of tuples where each tuple contains 
+                          (card info string, img_path) representing attack card data.
+                          
+    Returns:
+        list: A list of GameCardSup objects.
+    """
+    return [gc.GameCardSup(card_info, img_path) for card_info, img_path in sup_cards]
+
+
+def load_card_back(card_size):
+    size_w, size_h = card_size
+
+    img_path = cur_dir() + '\\assets\\bin\\card_back.png'
     original_image = Image.open(img_path)
     resized_image = original_image.resize((size_w, size_h), Image.LANCZOS)
     image = ImageTk.PhotoImage(resized_image)
