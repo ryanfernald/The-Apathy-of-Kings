@@ -43,8 +43,10 @@ Fine-tuning the user interface to improve the user experience.
 Preparing a complete game prototype by addressing remaining performance and interaction issues.
 
 
-
-
+utility.py modified from old one.
+class GameGrid seperated from game_play.py into single file.
+game_play.py changes: class Helper change name to GameControl.
+GameControl change method to make sure card won't stay anywhere, it will send back to where it from.
 
 
 
@@ -65,6 +67,8 @@ develop action one card overlap another one to determin if it should be attack i
 
 keep thinking about the structure of game, how to deal with seperating 2 players cards.
 
-
+a lot more to be working on:
+change method turn card (test the if the hand full or not then decide turn or not.
+thinking: how to solve the 2 player switch problem. find a way to make card turn freely.
 
 
