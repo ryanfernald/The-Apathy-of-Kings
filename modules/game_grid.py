@@ -13,6 +13,7 @@ class GameGrid:
         self.CARD_SIZE = (100, 150)  # card size
         self.X_THRESHOLD = 50  # Distance threshold for snapping
         self.Y_THRESHOLD = 75  # Distance threshold for snapping
+        self.DIVIDER = self.seperation_y() # y coord break players
 
         # Layout of cards
         self.PLAYER1_HAND, self.PLAYER1_DECK, self.PLAYER1_ATK, self.PLAYER1_DEF = [], [], [], []
@@ -160,6 +161,10 @@ class GameGrid:
             for position, occupied in positions.items():
                 status = "Occupied" if occupied else "Empty"
                 print(f"  Position {position}: {status}")
+
+    def seperation_y(self):
+        '''Let's assume upper half is player 1 and lower half is player 2'''
+        return (self.FIELD1_ATK[1] + self.FIELD2_ATK[1]) / 2
 
 def test1():
     root = tk.Tk()
