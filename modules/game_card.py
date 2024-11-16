@@ -120,6 +120,21 @@ class GameCardAtk(GameCard):
         res.append(f'Attack: {self.__atk}')
         res.append(f'Defense: {self.__def}')
         return res
+    
+    def __repr__(self):
+        """
+        show a string when print an object
+        """
+        return (
+            f"{self.__class__.__name__}("
+            f"name='{self.name}', "
+            f"card_type={self.type.value}, "
+            f"img_path='{self.imgPath}', "
+            f"star={self.__star}, "
+            f"element=CardElement({self.__element.value}), "
+            f"attack={self.__atk}, "
+            f"defense={self.__def})"
+        )
 
 class GameCardSup(GameCard):
     def __init__(self, argString: str, argPath):
@@ -168,5 +183,6 @@ if __name__ == "__main__":
     game_str = path1.split('\\')[-1]
     card1 = GameCardAtk(game_str, path1)
     print(card1.type)
+    #print(card1)
 
     print('-' * 10 + ' End ' + '-' * 10)

@@ -27,10 +27,16 @@ class GameGrid:
             "player2_atk": {},
             "player2_def": {}
         }
+        self.__info = {'player1': {'hand': [], 'deck': []},
+                       'player2': {'hand': [], 'deck': []}
+                       }
 
         # Run setup to initialize the grid layout
         self.layout_setup()
 
+    @property
+    def info(self):
+        return self.__info
 
     def canvas_draw(self, canvas, x=None, y=None, fill_color='#ADD8E6'):
         if x is None and y is None:

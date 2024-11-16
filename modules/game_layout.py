@@ -2,9 +2,6 @@ import tkinter as tk
 import utility as util
 
 
-
-
-
 class GameLayout:
     def __init__(self, root):
         # Create a canvas 
@@ -45,7 +42,7 @@ class GameLayout:
         self.card_image_canvas.create_image(240, 360, anchor="center", image=card_image)
 
         # Keep a reference to avoid garbage collection
-        self.card_image_ref = card_image
-        self.card_image_canvas.image = card_image
+        # self.card_image_ref = card_image
+        # self.card_image_canvas.image = card_image
 
 

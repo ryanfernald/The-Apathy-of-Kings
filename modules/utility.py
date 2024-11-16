@@ -2,7 +2,7 @@ import os
 import tkinter as tk
 from PIL import Image, ImageTk
 import game_card as gc
-
+import game_play as gp
 
 
 def cur_dir():
@@ -98,7 +98,7 @@ def convert_to_sup_card(sup_cards):
     return [gc.GameCardSup(card_info, img_path) for card_info, img_path in sup_cards]
 
 
-def load_card_back(card_size):
+def load_card_back(card_size = (100, 150)):
     size_w, size_h = card_size
 
     img_path = cur_dir() + '\\assets\\bin\\card_back.png'
@@ -127,11 +127,11 @@ if __name__ == "__main__":
     root.canvas = tk.Canvas(root, width=1000, height=960)
     root.canvas.grid(row=0, column=0, rowspan=2, padx=10, pady=10)
     
-    # size_w, size_h = 100, 150 # card size
-    # original_image = load_card_back()
-    # resized_image = original_image.resize((size_w, size_h), Image.LANCZOS)
-    # image = ImageTk.PhotoImage(resized_image)
-    image = load_card_back()
+    game1 = gp.GamePlay()
+    card1 = game1.info['player1']['hand'][0]
+
+    image = resize_image(card1.imgPath, 100, 150)
+    #image = load_card_back()
     root.canvas.create_image(100, 100, image=image, anchor="nw")
 
     print('-' * 10 + ' End ' + '-' * 10)

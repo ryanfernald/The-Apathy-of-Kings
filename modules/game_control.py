@@ -2,6 +2,7 @@ import time
 import game_grid as ggrid
 import game_card as gc
 
+
 class GameControl:
     
     card_original_coords = (0, 0)
@@ -152,18 +153,20 @@ class GameControl:
 
         # Keep a reference to avoid garbage collection
         canvas.image = card_image
+        # to-do: add code to make sure deck card move to hand area if there is empty spot
+        # bug: move card to hand area not last touched card spot
 
-        # Bind mouse events for dragging using Helper class
+        # Bind mouse events for dragging using GameControl class
         canvas.tag_bind(img_id, "<Button-1>", lambda event, img_id=img_id: GameControl.start_drag(event, canvas, img_id))
         canvas.tag_bind(img_id, "<B1-Motion>", lambda event, img_id=img_id: GameControl.on_drag(event, canvas, img_id))
         canvas.tag_bind(img_id, "<ButtonRelease-1>", lambda event, img_id=img_id, card=card: GameControl.on_release(event, canvas, img_id, card))
         # Bind right-click to display card information
-        canvas.tag_bind(
-            img_id,
-                "<Button-3>",
-                lambda event, card=card: card_display_panel.display_card_info(card)
-            )   #??? didn't display the information correct, display the last card info, why?
-
+        # canvas.tag_bind(
+        #     img_id,
+        #         "<Button-3>",
+        #         lambda event, card=card: card_display_panel.display_card_info(card)
+        #     )   # bug: only show first turned card info. why??
+        card_display_panel.canvas.tag_bind(img_id, "<Button-3>", lambda event, card=card: card_display_panel.display_card_info(card))
 
     # Static method to test if the clicked card belongs to Player 1 or Player 2
     @staticmethod
