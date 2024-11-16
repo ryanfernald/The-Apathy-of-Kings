@@ -1,7 +1,6 @@
-import game_play as gp
+import time
 import game_grid as ggrid
 import game_card as gc
-import time
 
 class GameControl:
     
@@ -38,7 +37,7 @@ class GameControl:
         # determin the allowed area based on the card type or player
         area = GameControl.get_allowed_area(canvas, image_id, card)
         if not GameControl.location_auto_lockin(canvas, image_id, area):
-            if GameControl.is_attack(canvas.coords(image_id)):
+            if isinstance(card, gc.GameCardAtk) & GameControl.is_attack(canvas.coords(image_id)):
                 # to do: add method to determin which space is attack
                 print('attack') # debug message
                 GameControl.attack_animation(canvas, image_id, card)
@@ -72,6 +71,7 @@ class GameControl:
             return 'player1'
         else:
             return 'player2'
+        
     def is_attack(card_coords):
         who = GameControl.whose_card()
         cur = GameControl.card_current_area(card_coords)

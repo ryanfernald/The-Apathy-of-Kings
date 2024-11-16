@@ -1,8 +1,4 @@
 import tkinter as tk
-import random
-from PIL import Image, ImageTk
-import game_card as gc
-import utility as util
 
 
 class GameGrid:

@@ -1,9 +1,7 @@
 import os
 import tkinter as tk
-import game_card as gc
-import game_play as gp
-import game_grid as ggrid
 from PIL import Image, ImageTk
+import game_card as gc
 
 
 
@@ -109,7 +107,12 @@ def load_card_back(card_size):
     image = ImageTk.PhotoImage(resized_image)
     return image
 
+def resize_image(imgPath, argW = 440, argH = 660, **kwargs):
+    original_image = Image.open(imgPath)
+    resized_img = original_image.resize((argW, argH), Image.LANCZOS)
+    return ImageTk.PhotoImage(resized_img)
 
+    
 
 # test
 if __name__ == "__main__":
