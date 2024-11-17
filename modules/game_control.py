@@ -146,8 +146,10 @@ class GameControl:
         return False
 
     @staticmethod
-    def turn_card(event, canvas, card_display_panel, card_image, img_id, card):
+    def turn_card(event, canvas, card_display_panel, card_image, img_id, card, gamestate):
         """Method to turn over the card and display the real image."""
+        if GameControl.is_hand_full(GameControl.whose_card(), gamestate):
+            return
         # Change the image of the card to the actual card image
         canvas.itemconfig(img_id, image=card_image)
 
@@ -268,4 +270,24 @@ class GameControl:
             return ggrid.GameGrid().PLAYER2_ATK + ggrid.GameGrid().PLAYER2_DEF
         elif who == 'player2':
             return ggrid.GameGrid().PLAYER1_ATK + ggrid.GameGrid().PLAYER1_DEF
-        
+
+    @staticmethod
+    def is_hand_full(player_key, gamestate):
+        """
+        Determines if the player's hand is full.
+
+        Parameters:
+        player_key (str): The player identifier ('player1' or 'player2').
+
+        Returns:
+        bool: True if the hand is full, False otherwise.
+        """
+        # Access the hand area from the gamestate for the given player
+        hand_area = gamestate[player_key]['hand']
+
+        # Check if all positions in the hand have a card (i.e., not None)
+        for position, card in hand_area.items():
+            if card is None:
+                return False  # If any position is empty, the hand is not full
+
+        return True  # If all positions are filled, the hand is full

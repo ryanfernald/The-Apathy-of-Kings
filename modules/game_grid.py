@@ -4,39 +4,41 @@ import tkinter as tk
 class GameGrid:
     def __init__(self):
         # Coordinates for the card images
-        self.PLAYER1, self.PLAYER2 = (100, 80), (100, 860)  # player hand starting coordinates
-        self.FIELD1_DEF, self.FIELD1_ATK, self.FIELD2_ATK, self.FIELD2_DEF = (150, 235), (150, 390), (150, 550), (150, 705)
-        self.CARD_SIZE = (100, 150)  # card size
-        self.X_THRESHOLD = 50  # Distance threshold for snapping
-        self.Y_THRESHOLD = 75  # Distance threshold for snapping
+        self.PLAYER1, self.PLAYER2 = (180, 80), (180, 860)  # player hand starting coordinates
+        self.FIELD1_DEF, self.FIELD1_ATK, self.FIELD2_ATK, self.FIELD2_DEF = (350, 235), (350, 380), (350, 560), (350, 705)
+        self.CARD_SIZE = (80, 120)  # card size
+        self.X_THRESHOLD = self.CARD_SIZE[0] // 2  # Distance threshold for snapping
+        self.Y_THRESHOLD = self.CARD_SIZE[1] // 2  # Distance threshold for snapping
         self.DIVIDER = self.seperation_y() # y coord break players
+        self.DRAGON1, self.DRAGON2 = (150, 312), (150, 627)
+        self.BUTTON_TURN = (920, 470)
 
         # Layout of cards
         self.PLAYER1_HAND, self.PLAYER1_DECK, self.PLAYER1_ATK, self.PLAYER1_DEF = [], [], [], []
         self.PLAYER2_HAND, self.PLAYER2_DECK, self.PLAYER2_ATK, self.PLAYER2_DEF = [], [], [], []
         self.COLOR_ATK, self.COLOR_DEF = '#EB6E63', '#90EE90'
 
-        # Occupancy tracking
-        self.area_state = {
-            "player1_hand": {},
-            "player2_hand": {},
-            "player1_deck": {},
-            "player2_deck": {},
-            "player1_atk": {},
-            "player1_def": {},
-            "player2_atk": {},
-            "player2_def": {}
-        }
-        self.__info = {'player1': {'hand': [], 'deck': []},
-                       'player2': {'hand': [], 'deck': []}
-                       }
-
         # Run setup to initialize the grid layout
         self.layout_setup()
+        # # Initialize
+        self.__init_state = {
+            'player1': {
+                'hand': {position: None for position in self.PLAYER1_HAND},
+                'deck': {self.PLAYER1_DECK[0]: []},
+                'atk': {position: None for position in self.PLAYER1_ATK},
+                'def': {position: None for position in self.PLAYER1_DEF}
+            },
+            'player2': {
+                'hand': {position: None for position in self.PLAYER2_HAND},
+                'deck': {self.PLAYER2_DECK[0]: []},
+                'atk': {position: None for position in self.PLAYER2_ATK},
+                'def': {position: None for position in self.PLAYER2_DEF}
+            }
+        } # may be move to some other class, hard to change it.
 
     @property
     def info(self):
-        return self.__info
+        return self.__init_state
 
     def canvas_draw(self, canvas, x=None, y=None, fill_color='#ADD8E6'):
         if x is None and y is None:
@@ -63,6 +65,13 @@ class GameGrid:
         hand_y = [y1 for _, y1 in all]
         for x, y in zip(hand_x, hand_y):
             self.canvas_draw(canvas, x, y, self.COLOR_DEF)
+
+    def canvas_reserve(self, canvas):
+        coords = [self.DRAGON1, self.DRAGON2, self.BUTTON_TURN]
+        for x, y in coords:
+            canvas.create_rectangle(x - 10, y - 10,
+                                    x + 10, y + 10,
+                                    outline='black', fill='MistyRose')
     
     # get all spot into 2 list, make sure to add all spot list
     def layout_player_section(self):
@@ -93,17 +102,6 @@ class GameGrid:
         self.layout_setup_deck()
         self.layout_setup_battlefield()
 
-        # Initialize occupied spaces as False for each position in the respective areas
-        self.area_state = {
-            "player1_hand": {position: False for position in self.PLAYER1_HAND},
-            "player2_hand": {position: False for position in self.PLAYER2_HAND},
-            "player1_deck": {position: False for position in self.PLAYER1_DECK},
-            "player2_deck": {position: False for position in self.PLAYER2_DECK},
-            "player1_atk": {position: False for position in self.PLAYER1_ATK},
-            "player1_def": {position: False for position in self.PLAYER1_DEF},
-            "player2_atk": {position: False for position in self.PLAYER2_ATK},
-            "player2_def": {position: False for position in self.PLAYER2_DEF},
-        }
 
     def layout_setup_hand(self):
         size_w, size_h = self.CARD_SIZE   # card size, should change upon resize window
@@ -125,7 +123,7 @@ class GameGrid:
     # relative to player hand corrodinate
     def layout_setup_deck(self):
         size_w, size_h = self.CARD_SIZE   # card size, should change upon resize window
-        pad_x, pad_y = 40, 20    # space between cards and deck section
+        pad_x, pad_y = 40, 10    # space between cards and deck section
         temp = ((self.PLAYER1_HAND[-1][0] + (size_w + pad_x)), (self.PLAYER1_HAND[-1][1] + pad_y))
         self.PLAYER1_DECK.append(temp)
         temp = ((self.PLAYER2_HAND[-1][0] + (size_w + pad_x)), (self.PLAYER2_HAND[-1][1] - pad_y))
@@ -156,17 +154,39 @@ class GameGrid:
             temp = ((x + (size_w + pad_x) * itr), (y + pad_y * itr))
             self.PLAYER2_DEF.append(temp)
 
-    def display_area_state(self):
-        """Display the current state of all areas."""
-        for area, positions in self.area_state.items():
-            print(f"{area}:")
-            for position, occupied in positions.items():
-                status = "Occupied" if occupied else "Empty"
-                print(f"  Position {position}: {status}")
-
     def seperation_y(self):
         '''Let's assume upper half is player 1 and lower half is player 2'''
         return (self.FIELD1_ATK[1] + self.FIELD2_ATK[1]) / 2
+
+    def display_area_state(self, current_state = None):
+        """
+        Debug function to display the current state of all areas.
+
+        This function iterates over the state dictionary (either provided or the default __init_state)
+        and prints out the status of each area (either the card present or None) for debugging purposes.
+
+        Parameters:
+        current_state (dict, optional): The state dictionary to be displayed. If None, the default __init_state is used.
+        """
+        if current_state == None:
+            current_state = self.__init_state
+
+        print("\n--- Current Area State ---")
+        for player, areas in current_state.items():
+            print(f"{player}:")
+            for area_name, positions in areas.items():
+                print(f"  {area_name}:")
+                for position, card in positions.items():
+                    if isinstance(positions, dict):  # If it is a dictionary (like hand, atk, def)
+                        status = f"Occupied by {card.name}" if card else "Empty"
+                        print(f"    Position {position}: {status}")
+                    elif isinstance(positions, list):  # If it is a list (like deck)
+                        if positions:
+                            card_names = [card.name for card in positions] if positions else []
+                            print(f"    Deck at position {position}: {' | '.join(card_names) if card_names else 'Empty'}")
+                        else:
+                            print(f"    Deck at position {position}: Empty")
+        print("--- End of Area State ---\n")
 
 def test1():
     root = tk.Tk()
@@ -185,6 +205,9 @@ def test1():
     # Draw the card hands, decks, and battlefields on the canvas
     game_grid1.canvas_layout(canvas)
     game_grid1.canvas_battlefield(canvas)
+    game_grid1.canvas_reserve(canvas)
+
+    game_grid1.display_area_state()
 
     #game_grid1.display_area_state()
 

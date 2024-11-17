@@ -48,6 +48,7 @@ class GameCard:
         self.__name = argName   # card name
         self.__type = CardType(argType)   # card type: attack card/ defense card/ support card
         self.__imgPath = argPath
+        self.__view = CardView(0)
     
     @property
     def name(self):
@@ -58,6 +59,9 @@ class GameCard:
     @property
     def imgPath(self):
         return self.__imgPath
+    @property
+    def view(self):
+        return self.__view
     @name.setter
     def name(self, argName: str):
         self.__name = argName
@@ -67,6 +71,9 @@ class GameCard:
     @imgPath.setter
     def imgPath(self, argPath):
         self.__imgPath = argPath
+    @view.setter
+    def view(self, argView):
+        self.__view = argView
 
     def stateParsing(self, argString: str):
         res = argString.split('.')[0].split(',')
@@ -91,6 +98,7 @@ class GameCardAtk(GameCard):
         self.__element = CardElement(int(temp[3]))
         self.__atk = int(temp[4])
         self.__def = int(temp[5])
+        self.__hp = self.__def
     
     @property
     def star(self):
@@ -104,6 +112,12 @@ class GameCardAtk(GameCard):
     @property
     def defense(self):
         return self.__def
+    @property
+    def hp(self):
+        return self.__hp
+    @hp.setter
+    def hp(self, update: int):
+        self.__hp = update
 
     def display(self):
         super().display()
@@ -111,6 +125,7 @@ class GameCardAtk(GameCard):
         print(f'Element: {self.__element}')
         print(f'Attack: {self.__atk}')
         print(f'Defense: {self.__def}')
+        print(f'HP: {self.__hp}')
     
     def info(self):
         res = []
@@ -119,11 +134,12 @@ class GameCardAtk(GameCard):
         res.append(f'Element: {self.__element}')
         res.append(f'Attack: {self.__atk}')
         res.append(f'Defense: {self.__def}')
+        res.append(f'HP: {self.__hp}')
         return res
     
     def __repr__(self):
         """
-        show a string when print an object
+        show a string when print an object # not useful currently, could be delete
         """
         return (
             f"{self.__class__.__name__}("
@@ -146,19 +162,28 @@ class GameCardDef(GameCard):
         temp = super().stateParsing(argString)
         super().__init__(temp[0], int(temp[1]), argPath)
         self.__def = int(temp[2])
+        self.__hp = self.__def
     
     @property
     def defense(self):
         return self.__def
+    @property
+    def hp(self):
+        return self.__hp
+    @hp.setter
+    def hp(self, update: int):
+        self.__hp = update
 
     def display(self):
         super().display()
         print(f'Defense: {self.__def}')
+        print(f'HP: {self.__hp}')
     
     def info(self):
         res = []
         res.extend(super().info())
         res.append(f'Defense: {self.__def}')
+        res.append(f'HP: {self.__hp}')
         return res
 
 # not sure use CardType or not for now
@@ -175,6 +200,10 @@ class CardElement(Enum):
     WATER = 4
     ELECTRO = 5
 
+# tracking Card front image or back image
+class CardView(Enum):
+    FRONT = 1
+    BACK = 0
 
 # test
 if __name__ == "__main__":
@@ -183,6 +212,6 @@ if __name__ == "__main__":
     game_str = path1.split('\\')[-1]
     card1 = GameCardAtk(game_str, path1)
     print(card1.type)
-    #print(card1)
+    print(card1.view)
 
     print('-' * 10 + ' End ' + '-' * 10)
