@@ -33,12 +33,27 @@ class GameGrid:
                 'deck': {self.PLAYER2_DECK[0]: []},
                 'atk': {position: None for position in self.PLAYER2_ATK},
                 'def': {position: None for position in self.PLAYER2_DEF}
-            }
+            },
+            'index': {}, 'img': {}
         } # may be move to some other class, hard to change it.
+        self.setup_index()
 
     @property
     def info(self):
         return self.__init_state
+
+    def setup_index(self):
+        for player_key in self.__init_state:
+            if player_key not in ['player1', 'player2']:
+                continue  # Skip non-player keys like 'index'
+            # Access player's data, i.e., hand, deck, atk, def areas
+            player_data = self.__init_state[player_key]
+            
+            # Iterate through each area in the player's data
+            for area_name, area_positions in player_data.items():
+                # Add each position to the 'index' dictionary with its respective area name
+                for position in area_positions.keys():
+                    self.__init_state['index'][position] = area_name
 
     def canvas_draw(self, canvas, x=None, y=None, fill_color='#ADD8E6'):
         if x is None and y is None:

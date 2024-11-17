@@ -75,6 +75,12 @@ class GameCard:
     def view(self, argView):
         self.__view = argView
 
+    def flip(self):
+        if self.__view == CardView.FRONT:
+            self.__view = CardView.BACK
+        else: 
+            self.__view = CardView.FRONT
+
     def stateParsing(self, argString: str):
         res = argString.split('.')[0].split(',')
         return res

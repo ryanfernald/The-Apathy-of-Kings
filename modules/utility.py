@@ -153,7 +153,7 @@ def resize_image(imgPath, argW = 440, argH = 660, tiny_imgPath = None, **kwargs)
     return ImageTk.PhotoImage(resized_img)
 
 
-def resize_image_w_bg(imgPath, argW=440, argH=660, player='player1'):
+def resize_image_w_bg(imgPath, coord=(440, 660), player='player1'):
     """
     Resize an image and paste it onto a plain colored background, centered.
 
@@ -174,17 +174,17 @@ def resize_image_w_bg(imgPath, argW=440, argH=660, player='player1'):
     # background color based on player
     bg_color = player_color(player)
     # Create the plain color background image
-    background = Image.new('RGB', (argW, argH), color=bg_color)
+    background = Image.new('RGB', coord, color=bg_color)
 
     # Open and resize the original image
-    img_size = (int(argW * 0.9), int(argH * 0.9))
+    img_size = (int(coord[0] * 0.9), int(coord[1] * 0.9))
     original_image = Image.open(imgPath)
     resized_img = original_image.resize(img_size, Image.LANCZOS)
 
     # Calculate the position to paste the resized image centered on the background
     img_width, img_height = img_size
-    img_x = (argW - img_width) // 2
-    img_y = (argH - img_height) // 2
+    img_x = (coord[0] - img_width) // 2
+    img_y = (coord[1] - img_height) // 2
 
     # Paste the resized image on the background
     background.paste(resized_img, (img_x, img_y), mask=resized_img if 'A' in resized_img.getbands() else None)
