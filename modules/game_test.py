@@ -69,7 +69,7 @@ class GameTestCase:
 
         for position, card in zip(hand_positions, cards):
             card.flip()
-            card_image = util.resize_image(imgPath=card.imgPath, argW=size_w, argH=size_h)
+            card_image = util.resize_image_w_bg(imgPath=card.imgPath, coord=(size_w, size_h), player=player_key)
 
             # Add the image to the canvas and get the image_id
             x_position, y_position = position

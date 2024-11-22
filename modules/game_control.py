@@ -16,9 +16,15 @@ class GameControl:
         GameControl.card_original_coords = canvas.coords(image_id)
         event.widget.start_x = event.x
         event.widget.start_y = event.y
-        result = GameControl.find_card_by_image_id(image_id, gamestate)
+        result = GameControl.find_card_by_image_id(gamestate, image_id)
         print(f"{result['player']}'s {result['card'].name} {result['card'].view} at {result['area']} coord: {result['coord']}")
+        cur_card = GameControl.find_card_by_coord(gamestate, result['coord'])
+        print(cur_card) # debug function find_card_by_coord()
         # print(f"({GameControl.card_original_coords[0]}, {GameControl.card_original_coords[1]})")
+        
+        # print('index\n', gamestate['index'])
+        # print('img\n', gamestate['img'])
+        # print('gamestate\n', gamestate)
 
     # Static method to handle the dragging operation
     @staticmethod
@@ -39,20 +45,23 @@ class GameControl:
 
     @staticmethod
     def on_release(event, canvas, image_id, gamestate):
-        result = GameControl.find_card_by_image_id(image_id, gamestate)
+        result = GameControl.find_card_by_image_id(gamestate, image_id)
         card = result['card']
         # determin the allowed area based on the card type or player
         area = GameControl.get_allowed_area(canvas, image_id, card, gamestate)
         if not GameControl.location_auto_lockin(canvas, image_id, area, gamestate):
             if isinstance(card, gc.GameCardAtk) & GameControl.is_attack(canvas.coords(image_id)):
                 # to do: add method to determin which space is attack
-                print('attack') # debug message
-                GameControl.attack_animation(canvas, image_id, card)
+                # print(canvas.coords(image_id), 'being attack in function on_release')
+                # print('attack') # debug message
+                GameControl.attack_animation(canvas, image_id, card, gamestate)
             GameControl.animate_move_back(canvas, image_id, GameControl.card_original_coords)
+            # debug message for game layout
+            GameControl.display_gamestate_layout(gamestate)
 
     @staticmethod
     def get_allowed_area(canvas, image_id, card, gamestate):
-        card_info = GameControl.find_card_by_image_id(image_id, gamestate)
+        card_info = GameControl.find_card_by_image_id(gamestate, image_id)
         if not card_info:
             return []  # If card information cannot be found, return an empty list
 
@@ -155,15 +164,15 @@ class GameControl:
             # Snap the card image to the target coordinate by aligning its center
             canvas.coords(image_id, closest_area[0] - width / 2, closest_area[1] - height / 2)
             # update gamestate
-            GameControl.update_gamestate(image_id, gamestate, closest_area)
+            GameControl.update_move_gamestate(gamestate, image_id, closest_area)
             # print(gamestate) # really long debug message, almost blind myself
-            GameControl.display_gamestate_layout(gamestate) # debug message
+            
             return True
         return False
     
     @staticmethod
-    def update_gamestate(image_id, gamestate, new):
-        card_info = GameControl.find_card_by_image_id(image_id, gamestate)
+    def update_move_gamestate(gamestate, image_id, new_coord):
+        card_info = GameControl.find_card_by_image_id(gamestate, image_id)
         # Extract information from card_info
         player_key = card_info['player']
         area_name = card_info['area']
@@ -172,20 +181,21 @@ class GameControl:
         # set old to None
         gamestate[player_key][area_name][old_position] = None
         # find area by new coord
-        new_area = gamestate['index'][new]
+        new_area = gamestate['index'][new_coord]
         # add to new coord
-        gamestate[player_key][new_area][new] = card_tuple
+        gamestate[player_key][new_area][new_coord] = card_tuple
 
 
     @staticmethod
     def turn_card(event, card_display_panel, img_id, gamestate):
         """Method to turn over the card and display the real image."""
-        coord = GameControl.hand_state(GameControl.whose_card(), gamestate)
+        coord = GameControl.hand_state(gamestate, GameControl.whose_card())
         print(f"Try to turn card and move to ({coord})")
         if coord == None:
             return
-        card_info = GameControl.find_card_by_image_id(img_id, gamestate)
+        card_info = GameControl.find_card_by_image_id(gamestate, img_id)
         ## TO-DO: structure problem deck is a list. 
+        print('Debug:', card_info)
         ## TO-DO
         player_key = card_info['player']
         area_name = card_info['area']
@@ -207,7 +217,7 @@ class GameControl:
         # auto move card to empty hand area.
         GameControl.animate_move_back(card_display_panel.canvas, img_id, coord)
         # update gamestate
-        GameControl.update_gamestate(img_id, gamestate, coord)
+        GameControl.update_move_gamestate(gamestate, img_id, coord)
 
         # Bind mouse events for dragging using GameControl class
         card_display_panel.canvas.tag_bind(
@@ -251,22 +261,9 @@ class GameControl:
         elif player_area == 'player2':
             return None
         return None
-
-    # Static method to check if two card images overlap # to be test later
-    @staticmethod
-    def is_overlap(canvas, image_id_1, image_id_2):
-        # Get the bounding box for both images
-        x1, y1, x2, y2 = canvas.bbox(image_id_1)
-        x3, y3, x4, y4 = canvas.bbox(image_id_2)
-
-        # Check if the bounding boxes overlap
-        if (x1 < x4 and x2 > x3 and y1 < y4 and y2 > y3):
-            return True
-        else:
-            return False
         
     @staticmethod
-    def attack_animation(canvas, image_id, card):
+    def attack_animation(canvas, image_id, card, gamestate):
         """Show an animation on the canvas to represent an attack."""
         current_x, current_y = canvas.coords(image_id)
         target_y = current_y - 30  # Move up to represent an attack
@@ -285,7 +282,7 @@ class GameControl:
             canvas.move(image_id, 0, -dy)
             canvas.update()
             time.sleep(0.02)
-        GameControl.animation_damage(canvas, image_id, card.attack)
+        GameControl.animation_damage(canvas, image_id, card.attack, gamestate)
 
     ## to do: make attack effect
     @staticmethod
@@ -308,14 +305,18 @@ class GameControl:
         canvas.update()
 
     @staticmethod
-    def animation_damage(canvas, image_id, attack_value):
+    def animation_damage(canvas, image_id, attack_value, gamestate):
         """Display the card's attack value on the canvas for 1.5 seconds."""
         area = GameControl.area_underattack()
         card_center_x, card_center_y, _, _ = GameControl.get_card_center(canvas, image_id)
         closest_area = GameControl.find_closest_area(card_center_x, card_center_y, area)
         atk_x, atk_y = closest_area
+        # print(f'{closest_area} being attacked') # debug message
         text_id = canvas.create_text(atk_x, atk_y, text=str(0 - attack_value), font=('Helvetica', 16, 'bold'), fill='red')
         canvas.update()
+        ### core method for game rule ###
+        if GameControl.card_reduce_hp(gamestate, closest_area, attack_value):
+            GameControl.remove_card_by_coord(gamestate, closest_area)
 
         # Pause for 1.5 seconds to display the attack value
         time.sleep(1.5)
@@ -331,9 +332,88 @@ class GameControl:
             return ggrid.GameGrid().PLAYER2_ATK + ggrid.GameGrid().PLAYER2_DEF
         elif who == 'player2':
             return ggrid.GameGrid().PLAYER1_ATK + ggrid.GameGrid().PLAYER1_DEF
+        
+    @staticmethod
+    def card_reduce_hp(gamestate, coord, attack_value):
+        # to-do: will get error if attack empty space
+        card = GameControl.find_card_by_coord(gamestate, coord)
+        #print(card)
+        card.hp = card.hp - attack_value
+        return True if card.hp <= 0 else False
+        
+    @staticmethod
+    def find_card_by_coord(gamestate, coord):
+        area_name = gamestate['index'][coord]
+        for player_key in ['player1', 'player2']:
+            if area_name in gamestate[player_key]:
+                positions = gamestate[player_key][area_name]
+                if coord in positions:
+                    return positions[coord][0]
 
     @staticmethod
-    def hand_state(player_key, gamestate):
+    def remove_card_by_coord(gamestate, coord):
+        # gamestate['index'] = {coord: 'area_name'} # area_name is hand, atk, def, or deck.
+        area_name = gamestate['index'][coord]
+        for player_key in ['player1', 'player2']:
+            if coord in gamestate[player_key][area_name]:
+                # card, image_id = gamestate[player_key][area_name][coord] # {coord: (card, image_id)}
+                gamestate['img'].pop(gamestate[player_key][area_name][coord][1])
+                gamestate[player_key][area_name][coord] = None
+                
+    @staticmethod
+    def defense_empty(gamestate, player_key):
+        """
+        Purpose: Checks if all defense positions for a specified player are empty.
+        Game rule: only defense position empty could attack Dragon.
+        This function iterates through the defense positions (`'def'` area) of a given player
+        in the `gamestate` and determines if all positions are empty (i.e., contain `None`).
+
+        Args:
+            gamestate (dict): A dictionary representing the current state of the game.
+                            The `gamestate` includes player-specific areas, such as `'def'` 
+                            for defense positions, `'atk'` for attack positions, etc.
+            player_key (str): The key representing the player whose defense positions
+                            are to be checked. Valid values are `'player1'` and `'player2'`.
+
+        Returns:
+            bool: `True` if all defense positions for the specified player are empty, 
+                `False` otherwise.
+
+        Example:
+            gamestate = {
+                'player1': {
+                    'def': {
+                        (350, 235): None,
+                        (450, 235): None,
+                        (550, 235): None,
+                        (650, 235): None,
+                        (750, 235): None
+                    }
+                },
+                'player2': {
+                    'def': {
+                        (350, 705): None,
+                        (450, 705): (GameCardDef(name='Fortified Walls', card_type=3, defense=800, HP=800), 101),
+                        (550, 705): None,
+                        (650, 705): None,
+                        (750, 705): None
+                    }
+                }
+            }
+
+            # Check if player1's defense positions are empty
+            defense_empty(gamestate, 'player1')  # Output: True
+
+            # Check if player2's defense positions are empty
+            defense_empty(gamestate, 'player2')  # Output: False
+        """
+        for position, info in gamestate[player_key]['def'].items():
+            if info != None:
+                return False
+        return True
+
+    @staticmethod
+    def hand_state(gamestate, player_key):
         """
         Determines if the player's hand is full.
 
@@ -353,7 +433,7 @@ class GameControl:
                 return coord  # If any position is empty, return a coord
 
     @staticmethod
-    def find_card_by_image_id(image_id, gamestate):
+    def find_card_by_image_id(gamestate, image_id):
         """
         Search for the card associated with a given image ID in the game state.
 

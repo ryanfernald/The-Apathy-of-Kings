@@ -151,11 +151,12 @@ class GameCardAtk(GameCard):
             f"{self.__class__.__name__}("
             f"name='{self.name}', "
             f"card_type={self.type.value}, "
-            f"img_path='{self.imgPath}', "
+            # f"img_path='{self.imgPath}', " # does not require verify at the moment
             f"star={self.__star}, "
             f"element=CardElement({self.__element.value}), "
             f"attack={self.__atk}, "
-            f"defense={self.__def})"
+            f"defense={self.__def}, "
+            f"HP={self.__hp})"
         )
 
 class GameCardSup(GameCard):
@@ -191,6 +192,19 @@ class GameCardDef(GameCard):
         res.append(f'Defense: {self.__def}')
         res.append(f'HP: {self.__hp}')
         return res
+    
+    def __repr__(self):
+        """
+        show a string when print an object # not useful currently, could be delete
+        """
+        return (
+            f"{self.__class__.__name__}("
+            f"name='{self.name}', "
+            f"card_type={self.type.value}, "
+            # f"img_path='{self.imgPath}', " # does not require verify at the moment
+            f"defense={self.__def}, "
+            f"HP={self.__hp})"
+        )
 
 # not sure use CardType or not for now
 class CardType(Enum):
