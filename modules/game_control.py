@@ -25,6 +25,8 @@ class GameControl:
         # print('index\n', gamestate['index'])
         # print('img\n', gamestate['img'])
         # print('gamestate\n', gamestate)
+        # debug message for game layout !!! THis debug message is now show layout upon click, not after movement
+        # GameControl.display_gamestate_layout(gamestate)
 
     # Static method to handle the dragging operation
     @staticmethod
@@ -56,8 +58,8 @@ class GameControl:
                 # print('attack') # debug message
                 GameControl.attack_animation(canvas, image_id, card, gamestate)
             GameControl.animate_move_back(canvas, image_id, GameControl.card_original_coords)
-            # debug message for game layout
-            GameControl.display_gamestate_layout(gamestate)
+        # debug message for game layout 
+        GameControl.display_gamestate_layout(gamestate)    
 
     @staticmethod
     def get_allowed_area(canvas, image_id, card, gamestate):
@@ -101,10 +103,12 @@ class GameControl:
         return not (who == cur)
 
     @staticmethod
-    def animate_move_back(canvas, image_id, original_loc):
+    def animate_move_back(canvas, image_id, coord, coord_offset=(0, 0)):
         """Animate the card moving back to its original location."""
         current_x, current_y = canvas.coords(image_id)
-        target_x, target_y = original_loc
+        target_x, target_y = coord
+        target_x = target_x + coord_offset[0]
+        target_y = target_y + coord_offset[1]
 
         steps = 20  # Number of animation steps
         dx = (target_x - current_x) / steps
@@ -164,14 +168,15 @@ class GameControl:
             # Snap the card image to the target coordinate by aligning its center
             canvas.coords(image_id, closest_area[0] - width / 2, closest_area[1] - height / 2)
             # update gamestate
-            GameControl.update_move_gamestate(gamestate, image_id, closest_area)
+            GameControl.gamestate_update_move(gamestate, image_id, closest_area)
             # print(gamestate) # really long debug message, almost blind myself
             
             return True
         return False
     
     @staticmethod
-    def update_move_gamestate(gamestate, image_id, new_coord):
+    def gamestate_update_move(gamestate, image_id, new_coord):
+        #print('method: gamestate_update_move()') # debug message
         card_info = GameControl.find_card_by_image_id(gamestate, image_id)
         # Extract information from card_info
         player_key = card_info['player']
@@ -179,7 +184,10 @@ class GameControl:
         old_position = card_info['coord']
         card_tuple = (card_info['card'], image_id)
         # set old to None
-        gamestate[player_key][area_name][old_position] = None
+        if area_name == 'deck':
+            gamestate[player_key][area_name][old_position]
+        else:
+            gamestate[player_key][area_name][old_position] = None
         # find area by new coord
         new_area = gamestate['index'][new_coord]
         # add to new coord
@@ -194,14 +202,15 @@ class GameControl:
         if coord == None:
             return
         card_info = GameControl.find_card_by_image_id(gamestate, img_id)
-        ## TO-DO: structure problem deck is a list. 
-        print('Debug:', card_info)
-        ## TO-DO
+        ## TO-DO: structure problem deck is a list. # find_card_by_image_id() cause issue because loop check for dict, sovle by using area_name directly
+        # print('method: turn_card()\nDebug:', card_info) # debug message
+        
         player_key = card_info['player']
         area_name = card_info['area']
         old_position = card_info['coord']
         card_tuple = (card_info['card'], img_id)
 
+        # class GameCard method to identify card is currently front or back 
         card_tuple[0].flip()
 
         # overwrite with front image
@@ -212,12 +221,13 @@ class GameControl:
         # Keep a reference to avoid garbage collection
         gamestate['img'][img_id] = card_image
         
-        # to-do: add code to make sure deck card move to hand area if there is empty spot
-        # bug: move card to hand area not last touched card spot
-        # auto move card to empty hand area.
-        GameControl.animate_move_back(card_display_panel.canvas, img_id, coord)
+        # to-do: add code to make sure deck card move to hand area if there is empty spot ## solve, but final location have error
+        # bug: move card to hand area not last touched card spot ## solve
+        # auto move card to empty hand area. ## solve, add offset to coord for this issue
+        coord_offset = ((0 - GameGrid().CARD_SIZE[0] / 2), (0 - GameGrid().CARD_SIZE[1] / 2))
+        GameControl.animate_move_back(card_display_panel.canvas, img_id, coord, coord_offset)
         # update gamestate
-        GameControl.update_move_gamestate(gamestate, img_id, coord)
+        GameControl.gamestate_update_move(gamestate, img_id, coord)
 
         # Bind mouse events for dragging using GameControl class
         card_display_panel.canvas.tag_bind(
@@ -435,14 +445,14 @@ class GameControl:
     @staticmethod
     def find_card_by_image_id(gamestate, image_id):
         """
-        Search for the card associated with a given image ID in the game state.
+        Search for the card associated with a given image ID in the gamestate.
 
         Parameters:
         ----------
-        image_id : int
-            The image ID to search for in the game state.
         gamestate : dict
             The current state of the game, containing information about all player areas (hand, deck, atk, def).
+        image_id : int
+            The image ID to search for in the game state.
 
         Returns:
         -------
@@ -454,26 +464,30 @@ class GameControl:
                 - "card": GameCard, the GameCard instance associated with the image ID
             If no card is found, returns None.
         """
-
+        #print("method: find_card_by_image_id()") # debug message
         for player_key, areas in gamestate.items():
             for area_name, positions in areas.items():
-                if isinstance(positions, dict):
+                if area_name in ['hand', 'atk', 'def']:
+                    # print(player_key, 'find_card_by_image_id: ', image_id, ' at hand, atk, def') # debug message
                     # For areas like hand, atk, def
                     for position, card_tuple in positions.items():
                         if card_tuple and len(card_tuple) == 2:
                             card, stored_image_id = card_tuple
                             if stored_image_id == image_id:
+                                #print(image_id, ' at ' , area_name, position) # debug message
                                 return {
                                     "player": player_key,
                                     "area": area_name,
                                     "coord": position,
                                     "card": card
                                 }
-                elif isinstance(positions, dict) and isinstance(next(iter(positions.values())), list):
-                    # For deck areas (decks are represented as a list of cards)
+                elif area_name == 'deck':
+                    # print('find_card_by_image_id: ', image_id, ' at deck') # debug message
+                    # deck value is list
                     for deck_position, deck_cards in positions.items():
                         for card, stored_image_id in deck_cards:
                             if stored_image_id == image_id:
+                                #print(image_id, ' at ' , area_name, position, 'idx in deck list: ', deck_cards.index((card, stored_image_id)), ' out of ', len(deck_cards)) # debug message
                                 return {
                                     "player": player_key,
                                     "area": "deck",
@@ -481,6 +495,7 @@ class GameControl:
                                     "card": card
                                 }
         return None
+
     
     def display_gamestate_layout(gamestate):
         """
