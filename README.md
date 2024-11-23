@@ -7,7 +7,7 @@ TO-DO:
 
 integration: separate game state variables to make tracking them easier.
 
-bug: card in deck will auto move to the last touched card location, should be only move to card hand area if there is empty spot.
+bug: card in deck will auto move to the last touched card location, should be only move to card hand area if there is empty spot. [fixed]
 
 functionality: support card isn't functional yet.
 
