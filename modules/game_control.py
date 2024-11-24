@@ -378,7 +378,7 @@ class GameControl:
             canvas.move(image_id, 0, -dy)
             canvas.update()
             time.sleep(0.02)
-        GameControl.animation_damage(canvas, image_id, card.attack, gamestate)
+        GameControl.animation_damage(gamestate, canvas, image_id, card.attack)
 
     ## to do: make attack effect
     @staticmethod
@@ -401,9 +401,9 @@ class GameControl:
         canvas.update()
 
     @staticmethod
-    def animation_damage(canvas, image_id, attack_value, gamestate):
+    def animation_damage(gamestate, canvas, image_id, attack_value):
         """Display the card's attack value on the canvas for 1.5 seconds."""
-        area = GameControl.area_underattack()
+        area = GameControl.get_allowed_attack_area(gamestate, canvas, image_id)
         card_center_x, card_center_y, _, _ = GameControl.get_card_center(canvas, image_id)
         closest_area = GameControl.find_closest_area(card_center_x, card_center_y, area)
         atk_x, atk_y = closest_area
