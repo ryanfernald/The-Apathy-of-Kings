@@ -21,3 +21,4 @@ functionality: get end turn button in field
 
 functionality: find a way to switch player's action to establish final game rule
 
+bug: card in deck should auto move to current player's hand not opponent's hand, last touched card's belonging cause logic error.
