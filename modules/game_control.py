@@ -56,7 +56,8 @@ class GameControl:
         area = GameControl.get_allowed_move_area(gamestate, canvas, image_id)
         if not GameControl.location_auto_lockin(canvas, image_id, area, gamestate):
             # only GameCardAtk allow to attack
-            if isinstance(card, gc.GameCardAtk) & GameControl.is_attack(canvas.coords(image_id)):
+            attackable_area = GameControl.get_allowed_attack_area(gamestate, canvas, image_id)
+            if isinstance(card, gc.GameCardAtk) & (len(attackable_area) == 0):
                 # to do: add method to determin which space is attack
                 # print(canvas.coords(image_id), 'being attack in function on_release')
                 # print('attack') # debug message

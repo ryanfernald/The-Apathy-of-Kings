@@ -9,9 +9,10 @@ from . import game_layout as glayout
 # test case 
 class GameTestCase:
     def __init__(self, root):
+        self.top, self.bottom = 0, 960
         self.root = root
         self.root.title('Image Display Test')
-        self.root.geometry("1500x960")
+        self.root.geometry(f"1500x{self.bottom}")
         
         # Create an instance of GameGrid
         self.game_grid1 = ggrid.GameGrid()
@@ -25,6 +26,10 @@ class GameTestCase:
 
         # Create a dictionary to hold player data
         self.gamestate = self.game_grid1.info
+        # Declare player region
+        self.player_areas = {'player1': (self.top, self.game_grid1.DIVIDER), 
+                             'player2': (self.game_grid1.DIVIDER, self.bottom)}
+        self.current_turn = 'player1'
 
         # Draw the card hands, decks, and battlefields on the canvas using the instance methods        
         self.game_grid1.canvas_layout(self.card_display_panel.canvas)
@@ -53,10 +58,31 @@ class GameTestCase:
 
 
 
+    def set_area_access(self):
+        """
+        Updates the canvas to enable access to the current player's area
+        and disable access to the other player's area.
+        """
+        for player_key, (start_y, end_y) in self.player_areas.items():
+            if player_key == self.current_turn:
+                # Allow access: Highlight area (example visual cue)
+                self.card_display_panel.canvas.create_rectangle(0, start_y, 980, end_y, tags=f"{player_key}_area")
+            else:
+                # Restrict access: Disable or hide area (example visual cue)
+                self.card_display_panel.canvas.create_rectangle(0, start_y, 980, end_y, tags=f"{player_key}_area")
 
+    def end_turn(self):
+        """
+        Toggles the turn and updates canvas accessibility.
+        """
+        # Switch to the other player
+        self.current_turn = 'player2' if self.current_turn == 'player1' else 'player1'
+        print('current turn: ', self.current_turn)
+        # Update the canvas to reflect the new turn
+        self.card_display_panel.canvas.delete("player1_area")
+        self.card_display_panel.canvas.delete("player2_area")
+        self.set_area_access()
 
-    def debug():
-        print('debug message')
 
     def setup_player_hand(self, player_key):
         """
