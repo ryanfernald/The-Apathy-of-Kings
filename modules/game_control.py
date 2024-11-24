@@ -2,13 +2,13 @@ import time
 import game_grid as ggrid
 import game_card as gc
 import utility as util
-from game_grid import GameGrid
+
 
 class GameControl:
     
     card_original_coords = (0, 0)
 
-
+    
     # Static method to start the drag operation
     @staticmethod
     def start_drag(event, canvas, image_id, gamestate):
@@ -16,6 +16,7 @@ class GameControl:
         GameControl.card_original_coords = canvas.coords(image_id)
         event.widget.start_x = event.x
         event.widget.start_y = event.y
+        ### following are debug messages, delete after completion
         result = GameControl.find_card_by_image_id(gamestate, image_id)
         print(f"{result['player']}'s {result['card'].name} {result['card'].view} at {result['area']} coord: {result['coord']}")
         cur_card = GameControl.find_card_by_coord(gamestate, result['coord'])
@@ -27,6 +28,7 @@ class GameControl:
         # print('gamestate\n', gamestate)
         # debug message for game layout !!! THis debug message is now show layout upon click, not after movement
         # GameControl.display_gamestate_layout(gamestate)
+        print('movable area: ' ,GameControl.get_allowed_move_area(gamestate, canvas, image_id))
 
     # Static method to handle the dragging operation
     @staticmethod
@@ -50,7 +52,7 @@ class GameControl:
         result = GameControl.find_card_by_image_id(gamestate, image_id)
         card = result['card']
         # determin the allowed area based on the card type or player
-        area = GameControl.get_allowed_area(canvas, image_id, card, gamestate)
+        area = GameControl.get_allowed_move_area(gamestate, canvas, image_id)
         if not GameControl.location_auto_lockin(canvas, image_id, area, gamestate):
             if isinstance(card, gc.GameCardAtk) & GameControl.is_attack(canvas.coords(image_id)):
                 # to do: add method to determin which space is attack
@@ -61,7 +63,7 @@ class GameControl:
         # debug message for game layout 
         GameControl.display_gamestate_layout(gamestate)    
 
-    @staticmethod
+    @staticmethod ### delete if get_allowed_move_area() fully functional
     def get_allowed_area(canvas, image_id, card, gamestate):
         card_info = GameControl.find_card_by_image_id(gamestate, image_id)
         if not card_info:
@@ -85,6 +87,64 @@ class GameControl:
                 allowed_area = list(gamestate['player2']['def'].keys())
             else:
                 allowed_area = list(gamestate['player2']['hand'].keys())
+
+        return allowed_area
+
+    @staticmethod
+    def get_allowed_move_area(gamestate, canvas, image_id):
+        card_info = GameControl.find_card_by_image_id(gamestate, image_id)
+        if not card_info:
+            # if card_info is None, that means that program have logic error
+            return []  # If card information cannot be found, return an empty list
+
+        player_key = card_info['player']
+        cur_area = card_info['area']
+        allowed_area = []
+        
+        # Determine the allowed area based on the player and card type
+        player_data = gamestate.get(player_key, {})
+        if isinstance(card_info['card'], gc.GameCardAtk):
+            # Get the 'atk' area and exclude occupied spaces
+            atk_area = player_data.get('atk', {})
+            allowed_area = [pos for pos, occupied in atk_area.items() if occupied is None]
+        elif isinstance(card_info['card'], gc.GameCardDef):
+            # Get the 'def' area and exclude occupied spaces
+            def_area = player_data.get('def', {})
+            allowed_area = [pos for pos, occupied in def_area.items() if occupied is None]
+        
+        if cur_area == 'hand':
+            hand_empty = GameControl.hand_empty_area(gamestate, player_key)
+            allowed_area.extend(hand_empty)    
+
+        return allowed_area
+
+    @staticmethod
+    def get_allowed_attack_area(gamestate, canvas, image_id):
+        card_info = GameControl.find_card_by_image_id(gamestate, image_id)
+        if not card_info:
+            # if card_info is None, that means that program have logic error
+            return []  # If card information cannot be found, return an empty list
+
+        player_key = card_info['player']
+        cur_area = card_info['area']
+        allowed_area = []
+        
+        # Determine the allowed area based on the player and card type
+        player_data = gamestate.get(player_key, {})
+        if isinstance(card_info['card'], gc.GameCardAtk):
+            # Get the 'atk' area and exclude occupied spaces
+            atk_area = player_data.get('atk', {})
+            allowed_area = [pos for pos, occupied in atk_area.items() if occupied is None]
+        elif isinstance(card_info['card'], gc.GameCardDef):
+            # Get the 'def' area and exclude occupied spaces
+            def_area = player_data.get('def', {})
+            allowed_area = [pos for pos, occupied in def_area.items() if occupied is None]
+        else:
+            # Get the 'hand' area (hand area does not need filtering as it represents cards in hand)
+            allowed_area = list(player_data.get('hand', {}).keys())
+        if cur_area == 'hand':
+            hand_empty = GameControl.hand_empty_area(gamestate, player_key)
+            allowed_area.extend(hand_empty)    
 
         return allowed_area
 
@@ -214,7 +274,7 @@ class GameControl:
         card_tuple[0].flip()
 
         # overwrite with front image
-        card_image = util.resize_image_w_bg(card_tuple[0].imgPath, GameGrid().CARD_SIZE, player_key)
+        card_image = util.resize_image_w_bg(card_tuple[0].imgPath, ggrid.GameGrid().CARD_SIZE, player_key)
         # Change the image of the card to the actual card image
         card_display_panel.canvas.itemconfig(img_id, image=card_image)
         
@@ -224,7 +284,7 @@ class GameControl:
         # to-do: add code to make sure deck card move to hand area if there is empty spot ## solve, but final location have error
         # bug: move card to hand area not last touched card spot ## solve
         # auto move card to empty hand area. ## solve, add offset to coord for this issue
-        coord_offset = ((0 - GameGrid().CARD_SIZE[0] / 2), (0 - GameGrid().CARD_SIZE[1] / 2))
+        coord_offset = ((0 - ggrid.GameGrid().CARD_SIZE[0] / 2), (0 - ggrid.GameGrid().CARD_SIZE[1] / 2))
         GameControl.animate_move_back(card_display_panel.canvas, img_id, coord, coord_offset)
         # update gamestate
         GameControl.gamestate_update_move(gamestate, img_id, coord)
@@ -242,12 +302,7 @@ class GameControl:
             img_id, "<ButtonRelease-1>", lambda event, img_id=img_id: GameControl.on_release(
                 event, card_display_panel.canvas, img_id, gamestate)
                 )
-        # Bind right-click to display card information
-        # canvas.tag_bind(
-        #     img_id,
-        #         "<Button-3>",
-        #         lambda event, card=card: card_display_panel.display_card_info(card)
-        #     )   # bug: only show first turned card info. why??
+        # display card info on right pane
         card_display_panel.canvas.tag_bind(
             img_id, "<Button-3>", lambda event: card_display_panel.display_card_info(card_tuple[0]))
 
@@ -435,12 +490,16 @@ class GameControl:
         """
         # Access the hand area from the gamestate for the given player
         hand_area = gamestate[player_key]['hand']
-        print(len(hand_area))
+        #print(len(hand_area))
         # Check if all positions in the hand have a card (i.e., not None)
         for coord, card in hand_area.items():
             # print(f"{coord} => {card[0].name}")
             if card is None:
                 return coord  # If any position is empty, return a coord
+    @staticmethod
+    def hand_empty_area(gamestate, player_key):
+        hand_area = gamestate[player_key]['hand']
+        return [coord for coord, card in hand_area.items() if card is None]
 
     @staticmethod
     def find_card_by_image_id(gamestate, image_id):
