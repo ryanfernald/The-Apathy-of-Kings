@@ -23,14 +23,20 @@ class GameTestCase:
         self.game1 = gp.GamePlay()
         # self.game1.displayGameInfo()    # message: show number of cards
 
+        # Create a dictionary to hold player data
+        self.gamestate = self.game_grid1.info
+
         # Draw the card hands, decks, and battlefields on the canvas using the instance methods        
         self.game_grid1.canvas_layout(self.card_display_panel.canvas)
         self.game_grid1.canvas_battlefield(self.card_display_panel.canvas)
         self.game_grid1.canvas_reserve(self.card_display_panel.canvas)
-        
-
-        # Create a dictionary to hold player data
-        self.gamestate = self.game_grid1.info
+        self.game_grid1.canvas_button(self.card_display_panel.canvas, cmd=lambda: print('End Turn'))
+        self.game_grid1.canvas_button(
+            self.card_display_panel.canvas, 
+            cmd=lambda: ctrl.GameControl.display_gamestate_layout(self.gamestate),
+            text='GameState',
+            offset=(0, -80)
+            )
 
         self.image_back = util.load_card_back(self.game_grid1.CARD_SIZE)
 
@@ -40,7 +46,7 @@ class GameTestCase:
         self.setup_player_deck('player2')
 
         # debug message
-        self.display_area_state()
+        # self.display_area_state()
 
 
 
@@ -49,7 +55,8 @@ class GameTestCase:
 
 
 
-    
+    def debug():
+        print('debug message')
 
     def setup_player_hand(self, player_key):
         """
@@ -189,7 +196,51 @@ class GameTestCase:
                     print(f"  Area {area_name}: Empty")
         print("\n--- End of Area State ---\n")
 
+    def display_gamestate_layout(self):
+        """
+        Debug function to display the current layout of the game state in a compact grid format.
+        
+        Displays an 'O' if a position is occupied by a card and 'X' if it is empty.
 
+        Parameters:
+        gamestate (dict): The game state dictionary to be displayed.
+        """
+        gamestate = self.gamestate
+        print("\n--- Game State Layout ---")
+
+        for player_key in ['player1', 'player2']:
+            print(f"\nPlayer: {player_key}")
+
+            # Creating a list for each area to display positions in a grid-like format
+            areas_to_display = ['hand', 'atk', 'def', 'deck']
+            layout = []
+
+            # Iterate over the areas for each player to get the status ('O' or 'X')
+            for area_name in areas_to_display:
+                area_positions = gamestate[player_key][area_name]
+                area_line = []
+                area_line.append(area_name)
+                if area_name == 'deck':
+                    for position, card_list in area_positions.items():
+                        if card_list:
+                            area_line.append('O')
+                        else:
+                            area_line.append('X')
+                else:
+                    for position, card_tuple in area_positions.items():
+                        if card_tuple:
+                            area_line.append('O')
+                        else:
+                            area_line.append('X')
+
+                layout.append(area_line)
+
+            # Print the layout for the player
+            # Assuming the layout for each area should be displayed one after the other
+            for line in layout:
+                print('  ' + ' '.join(line))
+
+        print("\n--- End of Game State Layout ---\n")
 
 
 if __name__ == "__main__":

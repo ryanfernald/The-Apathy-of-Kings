@@ -63,7 +63,7 @@ class GameControl:
                 GameControl.attack_animation(canvas, image_id, card, gamestate)
             GameControl.animate_move_back(canvas, image_id, GameControl.card_original_coords)
         # debug message for game layout 
-        GameControl.display_gamestate_layout(gamestate)    
+        # GameControl.display_gamestate_layout(gamestate)    
 
     @staticmethod ### delete if get_allowed_move_area() fully functional
     def get_allowed_area(canvas, image_id, card, gamestate):

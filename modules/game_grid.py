@@ -203,6 +203,43 @@ class GameGrid:
                             print(f"    Deck at position {position}: Empty")
         print("--- End of Area State ---\n")
 
+    def canvas_button(self, canvas, cmd=None ,text='End Turn', offset=(0, 0), width=100, height=50):
+        """
+        Creates a button for end turn.
+        """
+        x, y = self.BUTTON_TURN
+        x += offset[0]
+        y += offset[1]
+        
+        # Create a frame to hold the button
+        button_frame = tk.Frame(canvas, width=width, height=height, bg="#2C3E50", bd=0)
+        button_frame.pack_propagate(False)  # Prevent frame resizing to fit contents
+
+        # Create the button
+        button = tk.Button(
+            button_frame,
+            text=text,
+            command=cmd,
+            font=("Helvetica", 12, "bold"),
+            fg="white",  # Text color
+            bg="#2980B9",  # Background color
+            activeforeground="white",  # Text color on hover
+            activebackground="#3498DB",  # Background color on hover
+            relief="raised",  # Button relief style
+            bd=2,  # Border width
+            cursor="hand2"  # Change cursor to hand on hover
+        )
+
+        # Place the button inside the frame
+        button.pack(fill=tk.BOTH, expand=True)
+
+        # Add the frame to the canvas
+        canvas.create_window(x, y, window=button_frame)
+
+
+    
+
+
 def test1():
     root = tk.Tk()
     root.title('GameGrid Layout Test')
