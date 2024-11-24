@@ -1,7 +1,7 @@
 import time
-import game_grid as ggrid
-import game_card as gc
-import utility as util
+from . import game_grid as ggrid
+from . import game_card as gc
+from . import utility as util
 
 
 class GameControl:
@@ -28,7 +28,8 @@ class GameControl:
         # print('gamestate\n', gamestate)
         # debug message for game layout !!! THis debug message is now show layout upon click, not after movement
         # GameControl.display_gamestate_layout(gamestate)
-        print('movable area: ' ,GameControl.get_allowed_move_area(gamestate, canvas, image_id))
+        print('movable area: ' , GameControl.get_allowed_move_area(gamestate, canvas, image_id))
+        print('attackable area: ', GameControl.get_allowed_attack_area(gamestate, canvas, image_id))
 
     # Static method to handle the dragging operation
     @staticmethod
@@ -54,6 +55,7 @@ class GameControl:
         # determin the allowed area based on the card type or player
         area = GameControl.get_allowed_move_area(gamestate, canvas, image_id)
         if not GameControl.location_auto_lockin(canvas, image_id, area, gamestate):
+            # only GameCardAtk allow to attack
             if isinstance(card, gc.GameCardAtk) & GameControl.is_attack(canvas.coords(image_id)):
                 # to do: add method to determin which space is attack
                 # print(canvas.coords(image_id), 'being attack in function on_release')
@@ -123,30 +125,26 @@ class GameControl:
         card_info = GameControl.find_card_by_image_id(gamestate, image_id)
         if not card_info:
             # if card_info is None, that means that program have logic error
-            return []  # If card information cannot be found, return an empty list
+            return [] # If card_info is None, return an empty list
+        if card_info['area'] == 'hand':
+            return [] # card can not attack if it is in hand area
 
+        # Determine the current player key and opponent player key
         player_key = card_info['player']
-        cur_area = card_info['area']
-        allowed_area = []
-        
-        # Determine the allowed area based on the player and card type
-        player_data = gamestate.get(player_key, {})
-        if isinstance(card_info['card'], gc.GameCardAtk):
-            # Get the 'atk' area and exclude occupied spaces
-            atk_area = player_data.get('atk', {})
-            allowed_area = [pos for pos, occupied in atk_area.items() if occupied is None]
-        elif isinstance(card_info['card'], gc.GameCardDef):
-            # Get the 'def' area and exclude occupied spaces
-            def_area = player_data.get('def', {})
-            allowed_area = [pos for pos, occupied in def_area.items() if occupied is None]
-        else:
-            # Get the 'hand' area (hand area does not need filtering as it represents cards in hand)
-            allowed_area = list(player_data.get('hand', {}).keys())
-        if cur_area == 'hand':
-            hand_empty = GameControl.hand_empty_area(gamestate, player_key)
-            allowed_area.extend(hand_empty)    
+        opponent_key = 'player2' if player_key == 'player1' else 'player1'
 
-        return allowed_area
+        # Get the opponent's areas
+        atk_area = gamestate[opponent_key]['atk']
+        def_area = gamestate[opponent_key]['def']
+
+        # Collect occupied spaces from atk and def areas
+        attackable_area = [
+            coord for coord, card_list in atk_area.items() if card_list is not None
+        ] + [
+            coord for coord, card_list in def_area.items() if card_list is not None
+        ]
+
+        return attackable_area
 
     @staticmethod
     def card_current_area(card_coords):
@@ -159,7 +157,7 @@ class GameControl:
     def is_attack(card_coords):
         who = GameControl.whose_card()
         cur = GameControl.card_current_area(card_coords)
-        print(f'{who} card in {cur}\'s area')   # debug message
+        # print(f'{who} card in {cur}\'s area')   # debug message
         return not (who == cur)
 
     @staticmethod
@@ -257,18 +255,18 @@ class GameControl:
     @staticmethod
     def turn_card(event, card_display_panel, img_id, gamestate):
         """Method to turn over the card and display the real image."""
-        coord = GameControl.hand_state(gamestate, GameControl.whose_card())
-        print(f"Try to turn card and move to ({coord})")
-        if coord == None:
-            return
         card_info = GameControl.find_card_by_image_id(gamestate, img_id)
         ## TO-DO: structure problem deck is a list. # find_card_by_image_id() cause issue because loop check for dict, sovle by using area_name directly
         # print('method: turn_card()\nDebug:', card_info) # debug message
-        
         player_key = card_info['player']
         area_name = card_info['area']
         old_position = card_info['coord']
         card_tuple = (card_info['card'], img_id)
+
+        coord = GameControl.hand_state(gamestate, player_key)
+        print(f"Try to turn card and move to ({coord})")
+        if coord == None:
+            return
 
         # class GameCard method to identify card is currently front or back 
         card_tuple[0].flip()
@@ -310,22 +308,54 @@ class GameControl:
     @staticmethod
     def whose_card():
         """Determine if the card belongs to Player 1 or Player 2 based on its coordinates."""
+        # this simple way does not work correctly as more method implemented
+        # anything place could use find_card_by_image_id(), don't use this method
         if GameControl.card_original_coords[1] < ggrid.GameGrid().DIVIDER:
             return 'player1'
         elif GameControl.card_original_coords[1] > ggrid.GameGrid().DIVIDER:
             return 'player2'
         else:
-            return None
+            return None 
 
-    # Static method to determin if the card movement is attack other player. ### delete, unused
-    @staticmethod
-    def validate_card_movement(card_coords, target_area):
-        player_area = GameControl.whose_card(card_coords, ggrid.GameGrid())
-        if player_area == 'player1':
-            return None
-        elif player_area == 'player2':
-            return None
-        return None
+    # @staticmethod
+    # def whose_card_by_img_id(gamestate, image_id):
+    #     """
+    #     Determine if the card belongs to Player 1 or Player 2 based on image_id.
+
+    #     Args:
+    #         gamestate (dict): The game state containing player data and cards.
+    #         image_id (int): The unique identifier for the card image.
+
+    #     Returns:
+    #         str: 'player1' or 'player2', None if not found just in case.
+    #     """
+    #     # Iterate through both players in the game state
+    #     for player_key in ['player1', 'player2']:
+    #         player_data = gamestate.get(player_key, {})
+
+    #         # Check 'hand', 'atk', and 'def' areas for the image_id
+    #         for area in ['hand', 'atk', 'def']:
+    #             area_data = player_data.get(area, {})
+    #             for position, card_info in area_data.items():
+    #                 # card_info is expected to be a tuple: (card_object, img_id)
+    #                 if card_info and len(card_info) > 1 and card_info[1] == image_id:
+    #                     return player_key  # Return the player's key
+
+    #     # If no match is found, return None
+    #     return None
+
+
+
+
+    # # Static method to determin if the card movement is attack other player. ### delete, unused
+    # @staticmethod
+    # def validate_card_movement(card_coords, target_area):
+    #     player_area = GameControl.whose_card(card_coords, ggrid.GameGrid())
+    #     if player_area == 'player1':
+    #         return None
+    #     elif player_area == 'player2':
+    #         return None
+    #     return None
         
     @staticmethod
     def attack_animation(canvas, image_id, card, gamestate):
@@ -496,6 +526,7 @@ class GameControl:
             # print(f"{coord} => {card[0].name}")
             if card is None:
                 return coord  # If any position is empty, return a coord
+            
     @staticmethod
     def hand_empty_area(gamestate, player_key):
         hand_area = gamestate[player_key]['hand']

@@ -1,5 +1,5 @@
 import tkinter as tk
-import utility as util
+from . import utility as util
 
 
 class GameLayout:

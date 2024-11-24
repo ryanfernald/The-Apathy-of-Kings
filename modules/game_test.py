@@ -1,10 +1,9 @@
 import tkinter as tk
-import game_play as gp
-import utility as util
-import game_grid as ggrid
-import game_control as ctrl
-import game_layout as glayout
-from game_card import GameCard, GameCardAtk, GameCardDef, GameCardSup
+from . import game_play as gp
+from . import utility as util
+from . import game_grid as ggrid
+from . import game_control as ctrl
+from . import game_layout as glayout
 
 
 # test case 

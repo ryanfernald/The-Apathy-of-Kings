@@ -1,8 +1,8 @@
 import os
 import tkinter as tk
 from PIL import Image, ImageTk
-import game_card as gc
-import game_play as gp
+from . import game_card as gc
+from . import game_play as gp
 
 
 def cur_dir():
