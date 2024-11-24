@@ -11,6 +11,13 @@ bug: card in deck will auto move to the last touched card location, should be on
 
 functionality: support card isn't functional yet.
 
-functionality: write instance or dictionary for tracking game grid if that is a card in the spot.
+functionality: write instance or dictionary for tracking game grid if that is a card in the spot.[fixed] by modify GameControl.get_allowed_move_area() to restrict it.
 
-bug: game grid can have more than one card in it.
+bug: game grid can have more than one card in it. [fixed] by modify GameControl.get_allowed_move_area() to restrict it.
+
+functionality: get dragon in field
+
+functionality: get end turn button in field
+
+functionality: find a way to switch player's action to establish final game rule
+
