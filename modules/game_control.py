@@ -1,4 +1,5 @@
 import time
+import tkinter as tk
 from . import game_grid as ggrid
 from . import game_card as gc
 from . import utility as util
@@ -11,14 +12,14 @@ class GameControl:
     
     # Static method to start the drag operation
     @staticmethod
-    def start_drag(event, canvas, image_id, gamestate):
+    def start_drag(event, gamestate, canvas, image_id):
         # Record the starting point of the drag
         GameControl.card_original_coords = canvas.coords(image_id)
         event.widget.start_x = event.x
         event.widget.start_y = event.y
         ### following are debug messages, delete after completion
         result = GameControl.find_card_by_image_id(gamestate, image_id)
-        print(f"{result['player']}'s {result['card'].name} {result['card'].view} at {result['area']} coord: {result['coord']}")
+        print(f"{result['player']}'s {result['card'].name} {result['card'].view} at {result['area']} coord: {result['coord']}", f"compare to event: ({event.x}, {event.y})")
         cur_card = GameControl.find_card_by_coord(gamestate, result['coord'])
         print(cur_card) # debug function find_card_by_coord()
         # print(f"({GameControl.card_original_coords[0]}, {GameControl.card_original_coords[1]})")
@@ -33,7 +34,7 @@ class GameControl:
 
     # Static method to handle the dragging operation
     @staticmethod
-    def on_drag(event, canvas, image_id, gamestate):
+    def on_drag(event, gamestate, canvas, image_id):
         # Bring the card being dragged to the top of the stack
         canvas.tag_raise(image_id)
 
@@ -49,7 +50,7 @@ class GameControl:
         event.widget.start_y = event.y
 
     @staticmethod
-    def on_release(event, canvas, image_id, gamestate):
+    def on_release(event, gamestate, canvas, image_id):
         result = GameControl.find_card_by_image_id(gamestate, image_id)
         card = result['card']
         # determin the allowed area based on the card type or player
@@ -58,13 +59,103 @@ class GameControl:
             # only GameCardAtk allow to attack
             attackable_area = GameControl.get_allowed_attack_area(gamestate, canvas, image_id)
             if isinstance(card, gc.GameCardAtk) & (len(attackable_area) != 0):
+                target = GameControl.find_closest_area(event.x, event.y, attackable_area)
+                if (abs(target[0] - event.x) < ggrid.GameGrid().CARD_SIZE[0] / 2) and (abs(target[1] - event.y) < ggrid.GameGrid().CARD_SIZE[1] / 2):
+                    GameControl.attack_animation(gamestate, canvas, image_id, card, target)    
                 # to do: add method to determin which space is attack
                 # print(canvas.coords(image_id), 'being attack in function on_release')
                 # print('attack') # debug message
-                GameControl.attack_animation(canvas, image_id, card, gamestate)
             GameControl.animate_move_back(canvas, image_id, GameControl.card_original_coords)
         # debug message for game layout 
         # GameControl.display_gamestate_layout(gamestate)    
+
+    @staticmethod
+    def turn_card(event, gamestate, glayout, img_id):
+        """Method to turn over the card and display the real image."""
+        card_info = GameControl.find_card_by_image_id(gamestate, img_id)
+        ## TO-DO: structure problem deck is a list. # find_card_by_image_id() cause issue because loop check for dict, sovle by using area_name directly
+        # print('method: turn_card()\nDebug:', card_info) # debug message
+        player_key = card_info['player']
+        area_name = card_info['area']
+        old_position = card_info['coord']
+        card_tuple = (card_info['card'], img_id)
+
+        coord = GameControl.hand_state(gamestate, player_key)
+        print(f"Try to turn card and move to ({coord})")
+        if coord == None:
+            return
+
+        # class GameCard method to identify card is currently front or back 
+        card_tuple[0].flip()
+
+        # overwrite with front image
+        card_image = util.resize_image_w_bg(card_tuple[0].imgPath, ggrid.GameGrid().CARD_SIZE, player_key)
+        # Change the image of the card to the actual card image
+        glayout.canvas.itemconfig(img_id, image=card_image)
+        
+        # Keep a reference to avoid garbage collection
+        gamestate['img'][img_id] = card_image
+        
+        # to-do: add code to make sure deck card move to hand area if there is empty spot ## solve, but final location have error
+        # bug: move card to hand area not last touched card spot ## solve
+        # auto move card to empty hand area. ## solve, add offset to coord for this issue
+        coord_offset = ((0 - ggrid.GameGrid().CARD_SIZE[0] / 2), (0 - ggrid.GameGrid().CARD_SIZE[1] / 2))
+        GameControl.animate_move_back(glayout.canvas, img_id, coord, coord_offset)
+        # update gamestate
+        GameControl.gamestate_update_move(gamestate, img_id, coord)
+
+        # # Bind mouse events for dragging using GameControl class
+        # glayout.canvas.tag_bind(
+        #     img_id, "<Button-1>", lambda event, img_id=img_id: GameControl.start_drag(
+        #         event, glayout.canvas, img_id, gamestate)
+        #         )
+        # glayout.canvas.tag_bind(
+        #     img_id, "<B1-Motion>", lambda event, img_id=img_id: GameControl.on_drag(
+        #         event, glayout.canvas, img_id, gamestate)
+        #         )
+        # glayout.canvas.tag_bind(
+        #     img_id, "<ButtonRelease-1>", lambda event, img_id=img_id: GameControl.on_release(
+        #         event, glayout.canvas, img_id, gamestate)
+        #         )
+        # # display card info on right pane
+        # glayout.canvas.tag_bind(
+        #     img_id, "<Button-3>", lambda event: glayout.display_card_info(card_tuple[0]))
+        GameControl.action_card_front(gamestate, glayout, img_id)
+
+    @staticmethod
+    def action_card_front(gamestate, glayout, image_id):
+        card = GameControl.find_card_by_image_id(gamestate, image_id)['card']
+        glayout.canvas.tag_bind(
+            image_id, "<Button-1>", lambda event, img_id=image_id: GameControl.start_drag(
+                event, gamestate, glayout.canvas, img_id
+            )
+        )
+        glayout.canvas.tag_bind(
+            image_id, "<B1-Motion>", lambda event, img_id=image_id: GameControl.on_drag(
+                event, gamestate, glayout.canvas, img_id
+            )
+        )
+        glayout.canvas.tag_bind(
+            image_id, "<ButtonRelease-1>", lambda event, img_id=image_id: GameControl.on_release(
+                event, gamestate, glayout.canvas, img_id
+            )
+        )
+        glayout.canvas.tag_bind(
+            image_id, "<Button-3>", lambda event, card=card: glayout.display_card_info(card)
+        )
+
+    @staticmethod
+    def action_card_back(gamestate, glayout, image_id):
+        glayout.canvas.tag_bind(
+                image_id, "<Double-Button-1>", 
+                lambda event, img_id=image_id: GameControl.turn_card(
+                    event, gamestate, glayout, img_id
+                    )
+                )
+    @staticmethod
+    def swtich_player_turn(current_player, gamestate, glayout):
+        
+        return
 
     @staticmethod ### delete if get_allowed_move_area() fully functional
     def get_allowed_area(canvas, image_id, card, gamestate):
@@ -253,57 +344,6 @@ class GameControl:
         gamestate[player_key][new_area][new_coord] = card_tuple
 
 
-    @staticmethod
-    def turn_card(event, card_display_panel, img_id, gamestate):
-        """Method to turn over the card and display the real image."""
-        card_info = GameControl.find_card_by_image_id(gamestate, img_id)
-        ## TO-DO: structure problem deck is a list. # find_card_by_image_id() cause issue because loop check for dict, sovle by using area_name directly
-        # print('method: turn_card()\nDebug:', card_info) # debug message
-        player_key = card_info['player']
-        area_name = card_info['area']
-        old_position = card_info['coord']
-        card_tuple = (card_info['card'], img_id)
-
-        coord = GameControl.hand_state(gamestate, player_key)
-        print(f"Try to turn card and move to ({coord})")
-        if coord == None:
-            return
-
-        # class GameCard method to identify card is currently front or back 
-        card_tuple[0].flip()
-
-        # overwrite with front image
-        card_image = util.resize_image_w_bg(card_tuple[0].imgPath, ggrid.GameGrid().CARD_SIZE, player_key)
-        # Change the image of the card to the actual card image
-        card_display_panel.canvas.itemconfig(img_id, image=card_image)
-        
-        # Keep a reference to avoid garbage collection
-        gamestate['img'][img_id] = card_image
-        
-        # to-do: add code to make sure deck card move to hand area if there is empty spot ## solve, but final location have error
-        # bug: move card to hand area not last touched card spot ## solve
-        # auto move card to empty hand area. ## solve, add offset to coord for this issue
-        coord_offset = ((0 - ggrid.GameGrid().CARD_SIZE[0] / 2), (0 - ggrid.GameGrid().CARD_SIZE[1] / 2))
-        GameControl.animate_move_back(card_display_panel.canvas, img_id, coord, coord_offset)
-        # update gamestate
-        GameControl.gamestate_update_move(gamestate, img_id, coord)
-
-        # Bind mouse events for dragging using GameControl class
-        card_display_panel.canvas.tag_bind(
-            img_id, "<Button-1>", lambda event, img_id=img_id: GameControl.start_drag(
-                event, card_display_panel.canvas, img_id, gamestate)
-                )
-        card_display_panel.canvas.tag_bind(
-            img_id, "<B1-Motion>", lambda event, img_id=img_id: GameControl.on_drag(
-                event, card_display_panel.canvas, img_id, gamestate)
-                )
-        card_display_panel.canvas.tag_bind(
-            img_id, "<ButtonRelease-1>", lambda event, img_id=img_id: GameControl.on_release(
-                event, card_display_panel.canvas, img_id, gamestate)
-                )
-        # display card info on right pane
-        card_display_panel.canvas.tag_bind(
-            img_id, "<Button-3>", lambda event: card_display_panel.display_card_info(card_tuple[0]))
 
     # Static method to test if the clicked card belongs to Player 1 or Player 2
     @staticmethod
@@ -318,6 +358,26 @@ class GameControl:
         else:
             return None 
 
+    @staticmethod
+    def display_card_info(self, game_card):
+        # Clear previous information
+        self.card_info_text.delete(1.0, tk.END)
+        self.card_image_canvas.delete("all")
+
+        # Display card information
+        card_info = game_card.info()
+        for itr in card_info:
+            self.card_info_text.insert(tk.END, itr + '\n')
+
+        # Load and display the card image
+        card_image = util.resize_image(game_card.imgPath, int(self.rhs_upper[0] * 0.95), int(self.rhs_upper[1] * 0.95))
+
+        # Display the image on the canvas
+        self.card_image_canvas.create_image(240, 360, anchor="center", image=card_image)
+
+        # Keep a reference to avoid garbage collection
+        self.card_image_ref = card_image
+        self.card_image_canvas.image = card_image
     # @staticmethod
     # def whose_card_by_img_id(gamestate, image_id):
     #     """
@@ -359,7 +419,7 @@ class GameControl:
     #     return None
         
     @staticmethod
-    def attack_animation(canvas, image_id, card, gamestate):
+    def attack_animation(gamestate, canvas, image_id, card, coord):
         """Show an animation on the canvas to represent an attack."""
         current_x, current_y = canvas.coords(image_id)
         target_y = current_y - 30  # Move up to represent an attack
@@ -378,7 +438,7 @@ class GameControl:
             canvas.move(image_id, 0, -dy)
             canvas.update()
             time.sleep(0.02)
-        GameControl.animation_damage(gamestate, canvas, image_id, card.attack)
+        GameControl.animation_damage(gamestate, canvas, image_id, card, coord)
 
     ## to do: make attack effect
     @staticmethod
@@ -401,18 +461,18 @@ class GameControl:
         canvas.update()
 
     @staticmethod
-    def animation_damage(gamestate, canvas, image_id, attack_value):
+    def animation_damage(gamestate, canvas, image_id, card, coord):
         """Display the card's attack value on the canvas for 1.5 seconds."""
-        area = GameControl.get_allowed_attack_area(gamestate, canvas, image_id)
-        card_center_x, card_center_y, _, _ = GameControl.get_card_center(canvas, image_id)
-        closest_area = GameControl.find_closest_area(card_center_x, card_center_y, area)
-        atk_x, atk_y = closest_area
+        # area = GameControl.get_allowed_attack_area(gamestate, canvas, image_id)
+        # card_center_x, card_center_y, _, _ = GameControl.get_card_center(canvas, image_id)
+        # closest_area = GameControl.find_closest_area(card_center_x, card_center_y, area)
+        atk_x, atk_y = coord
         # print(f'{closest_area} being attacked') # debug message
-        text_id = canvas.create_text(atk_x, atk_y, text=str(0 - attack_value), font=('Helvetica', 16, 'bold'), fill='red')
+        text_id = canvas.create_text(atk_x, atk_y, text=str(0 - card.attack), font=('Helvetica', 16, 'bold'), fill='red')
         canvas.update()
         ### core method for game rule ###
-        if GameControl.card_reduce_hp(gamestate, closest_area, attack_value):
-            GameControl.remove_card_by_coord(gamestate, closest_area)
+        if GameControl.card_reduce_hp(gamestate, coord, card.attack):
+            GameControl.remove_card_by_coord(gamestate, coord)
 
         # Pause for 1.5 seconds to display the attack value
         time.sleep(1.5)

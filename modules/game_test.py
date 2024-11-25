@@ -26,16 +26,15 @@ class GameTestCase:
 
         # Create a dictionary to hold player data
         self.gamestate = self.game_grid1.info
-        # Declare player region
-        self.player_areas = {'player1': (self.top, self.game_grid1.DIVIDER), 
-                             'player2': (self.game_grid1.DIVIDER, self.bottom)}
-        self.current_turn = 'player1'
+        
+        self.current_player = 'player1'
 
         # Draw the card hands, decks, and battlefields on the canvas using the instance methods        
         self.game_grid1.canvas_layout(self.card_display_panel.canvas)
         self.game_grid1.canvas_battlefield(self.card_display_panel.canvas)
         self.game_grid1.canvas_reserve(self.card_display_panel.canvas)
-        self.game_grid1.canvas_button(self.card_display_panel.canvas, cmd=lambda: print('End Turn'))
+
+        self.game_grid1.canvas_button(self.card_display_panel.canvas, cmd=lambda: self.toggle_color)
         self.game_grid1.canvas_button(
             self.card_display_panel.canvas, 
             cmd=lambda: ctrl.GameControl.display_gamestate_layout(self.gamestate),
@@ -61,18 +60,6 @@ class GameTestCase:
 
 
 
-    def set_area_access(self):
-        """
-        Updates the canvas to enable access to the current player's area
-        and disable access to the other player's area.
-        """
-        for player_key, (start_y, end_y) in self.player_areas.items():
-            if player_key == self.current_turn:
-                # Allow access: Highlight area (example visual cue)
-                self.card_display_panel.canvas.create_rectangle(0, start_y, 980, end_y, tags=f"{player_key}_area")
-            else:
-                # Restrict access: Disable or hide area (example visual cue)
-                self.card_display_panel.canvas.create_rectangle(0, start_y, 980, end_y, tags=f"{player_key}_area")
 
     def end_turn(self):
         """
@@ -86,6 +73,16 @@ class GameTestCase:
         self.card_display_panel.canvas.delete("player2_area")
         self.set_area_access()
 
+    def toggle_color(btn):
+        """
+        Toggles the button's background color between color1 and color2.
+        """
+        colors = {'player1': '#140AB4', 'player2': '#B40A14'}
+        current_color = btn.cget("bg")
+        btn.config(bg=colors['player1'] if current_color == colors['player2'] else colors['player2'])
+        # Optionally call additional logic when clicked
+        # if cmd:
+        #     cmd()
 
     def setup_player_hand(self, player_key):
         """
@@ -118,24 +115,25 @@ class GameTestCase:
             self.gamestate[player_key]['hand'][position] = (card, image_id)
             self.gamestate['img'][image_id] = card_image
             # Optionally bind mouse events to the image on the canvas using image_id
-            self.card_display_panel.canvas.tag_bind(
-                image_id, "<Button-1>", lambda event, img_id=image_id: ctrl.GameControl.start_drag(
-                    event, self.card_display_panel.canvas, img_id, self.gamestate
-                )
-            )
-            self.card_display_panel.canvas.tag_bind(
-                image_id, "<B1-Motion>", lambda event, img_id=image_id: ctrl.GameControl.on_drag(
-                    event, self.card_display_panel.canvas, img_id, self.gamestate
-                )
-            )
-            self.card_display_panel.canvas.tag_bind(
-                image_id, "<ButtonRelease-1>", lambda event, img_id=image_id: ctrl.GameControl.on_release(
-                    event, self.card_display_panel.canvas, img_id, self.gamestate
-                )
-            )
-            self.card_display_panel.canvas.tag_bind(
-                image_id, "<Button-3>", lambda event, card=card: self.card_display_panel.display_card_info(card)
-            )
+            # self.card_display_panel.canvas.tag_bind(
+            #     image_id, "<Button-1>", lambda event, img_id=image_id: ctrl.GameControl.start_drag(
+            #         event, self.card_display_panel.canvas, img_id, self.gamestate
+            #     )
+            # )
+            # self.card_display_panel.canvas.tag_bind(
+            #     image_id, "<B1-Motion>", lambda event, img_id=image_id: ctrl.GameControl.on_drag(
+            #         event, self.card_display_panel.canvas, img_id, self.gamestate
+            #     )
+            # )
+            # self.card_display_panel.canvas.tag_bind(
+            #     image_id, "<ButtonRelease-1>", lambda event, img_id=image_id: ctrl.GameControl.on_release(
+            #         event, self.card_display_panel.canvas, img_id, self.gamestate
+            #     )
+            # )
+            # self.card_display_panel.canvas.tag_bind(
+            #     image_id, "<Button-3>", lambda event, card=card: self.card_display_panel.display_card_info(card)
+            # )
+            ctrl.GameControl.action_card_front(self.gamestate, self.card_display_panel, image_id)
 
     def setup_player_deck(self, player_key):
         """
@@ -172,12 +170,13 @@ class GameTestCase:
             #     )
             # ) # does not work.......why??
             # Bind double-click (left button) to turn the card over
-            self.card_display_panel.canvas.tag_bind(
-                image_id, "<Double-Button-1>", 
-                lambda event, img_id=image_id: ctrl.GameControl.turn_card(
-                    event, self.card_display_panel, img_id, self.gamestate
-                    )
-                )
+            # self.card_display_panel.canvas.tag_bind(
+            #     image_id, "<Double-Button-1>", 
+            #     lambda event, img_id=image_id: ctrl.GameControl.turn_card(
+            #         event, self.card_display_panel, img_id, self.gamestate
+            #         )
+            #     )
+            ctrl.GameControl.action_card_back(self.gamestate, self.card_display_panel, image_id)
         # print(f'{player_key} deck: {len(self.state[player_key]["deck_images"])}')
 
     def display_area_state(self):
@@ -271,6 +270,7 @@ class GameTestCase:
 
         print("\n--- End of Game State Layout ---\n")
 
+    
 
 if __name__ == "__main__":
     
