@@ -39,6 +39,7 @@ from .utility import (
     resize_image,
     resize_image_w_bg,
     player_color,
+    load_dragons_from_assets
 )
 
 # Defining __all__ for explicit export control
@@ -64,4 +65,5 @@ __all__ = [
     "resize_image",
     "resize_image_w_bg",
     "player_color",
+    "load_dragons_from_assets"
 ]

@@ -215,6 +215,32 @@ def player_color(player):
     else:
         return (0, 0, 0)
 
+def load_dragons_from_assets():
+    """
+    Loads dragon images from the 'assets/dragons' directory.
+
+    Returns:
+        list: A list of tuples with dragon names and their file paths.
+    """
+    # Use the directory of this script as a base path
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+    folder_name = 'assets\\dragons'
+    folder_path = os.path.join(base_dir, folder_name)
+
+    # print(f"Looking for dragons in: {folder_path}")  # Debugging
+
+    dragons = []
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            if file.lower().endswith(".png"):  # Ensure case-insensitivity
+                dragon_name = os.path.splitext(file)[0]
+                file_path = os.path.join(root, file)
+                dragons.append((dragon_name, file_path))
+
+    # print(f"Loaded dragons: {dragons}")  # Debugging
+    
+    return dragons
+
 # test
 if __name__ == "__main__":
     root = tk.Tk()

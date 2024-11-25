@@ -45,6 +45,9 @@ class GameTestCase:
 
         self.image_back = util.load_card_back(self.game_grid1.CARD_SIZE)
 
+        # Render dragons on the canvas
+        self.game_grid1.display_dragons(self.card_display_panel.canvas, self.game1.info)
+
         self.setup_player_hand('player1')
         self.setup_player_hand('player2')
         self.setup_player_deck('player1')

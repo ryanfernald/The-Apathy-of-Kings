@@ -46,4 +46,3 @@ class GameLayout:
         self.card_image_ref = card_image
         self.card_image_canvas.image = card_image
 
-

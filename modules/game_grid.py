@@ -1,4 +1,5 @@
 import tkinter as tk
+from modules import utility as util
 
 
 class GameGrid:
@@ -235,6 +236,34 @@ class GameGrid:
 
         # Add the frame to the canvas
         canvas.create_window(x, y, window=button_frame)
+    
+    def display_dragons(self, canvas, gamestate):
+        """
+        Displays dragons for both players on the canvas.
+        Args:
+            canvas (tk.Canvas): The canvas to draw on.
+            gamestate (dict): The game state containing dragon information.
+        """
+        # Get dragon data from gamestate
+        player1_dragon = gamestate['player1'].get('dragon')
+        player2_dragon = gamestate['player2'].get('dragon')
+
+        # Player 1's dragon
+        if player1_dragon:
+            name, path = player1_dragon
+            print(f"Rendering Player 1's dragon: {name} at {self.DRAGON1}")  # Debug
+            dragon_image1 = util.resize_image(path, 250, 250)
+            canvas.create_image(self.DRAGON1[0], self.DRAGON1[1], image=dragon_image1, anchor="center")
+            self.dragon_image1 = dragon_image1  # Store reference to avoid garbage collection
+
+        # Player 2's dragon
+        if player2_dragon:
+            name, path = player2_dragon
+            print(f"Rendering Player 2's dragon: {name} at {self.DRAGON2}")  # Debug
+            dragon_image2 = util.resize_image(path, 250, 250)
+            canvas.create_image(self.DRAGON2[0], self.DRAGON2[1], image=dragon_image2, anchor="center")
+            self.dragon_image2 = dragon_image2  # Store reference to avoid garbage collection
+
 
 
     
