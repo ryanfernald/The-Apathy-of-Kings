@@ -18,7 +18,7 @@ class GameTestCase:
         self.game_grid1 = ggrid.GameGrid()
         
         # Initialize CardDisplayPanel to handle card information display
-        self.card_display_panel = glayout.GameLayout(root)
+        self.card_display_panel = glayout.GameLayout(root, self.game_grid1)
         
         # Initialize GamePlay and get card information
         self.game1 = gp.GamePlay()
@@ -26,20 +26,28 @@ class GameTestCase:
 
         # Create a dictionary to hold player data
         self.gamestate = self.game_grid1.info
-        
-        self.current_player = 'player1'
+        self.player_img_id = {'player1': [], 'player2': []}
+
+        self.current_turn = 'player1'
 
         # Draw the card hands, decks, and battlefields on the canvas using the instance methods        
-        self.game_grid1.canvas_layout(self.card_display_panel.canvas)
-        self.game_grid1.canvas_battlefield(self.card_display_panel.canvas)
-        self.game_grid1.canvas_reserve(self.card_display_panel.canvas)
+        # self.game_grid1.canvas_layout(self.card_display_panel.canvas)
+        # self.game_grid1.canvas_battlefield(self.card_display_panel.canvas)
+        # self.game_grid1.canvas_reserve(self.card_display_panel.canvas)
 
-        self.game_grid1.canvas_button(self.card_display_panel.canvas, cmd=lambda: self.toggle_color)
         self.game_grid1.canvas_button(
             self.card_display_panel.canvas, 
             cmd=lambda: ctrl.GameControl.display_gamestate_layout(self.gamestate),
             text='GameState',
             offset=(0, -80)
+            )
+        self.button_end_turn = self.game_grid1.canvas_button(self.card_display_panel.canvas, cmd=self.end_turn, color='#140AB4')
+        # debug button
+        self.game_grid1.canvas_button(
+            self.card_display_panel.canvas, 
+            cmd=self.debug_action_disable,
+            text='Debug',
+            offset=(0, 80)
             )
 
         self.image_back = util.load_card_back(self.game_grid1.CARD_SIZE)
@@ -63,26 +71,32 @@ class GameTestCase:
 
     def end_turn(self):
         """
-        Toggles the turn and updates canvas accessibility.
+        End turn mechanism
         """
         # Switch to the other player
-        self.current_turn = 'player2' if self.current_turn == 'player1' else 'player1'
+        self.current_turn = 'player1' if self.current_turn == 'player2' else 'player2'
         print('current turn: ', self.current_turn)
         # Update the canvas to reflect the new turn
-        self.card_display_panel.canvas.delete("player1_area")
-        self.card_display_panel.canvas.delete("player2_area")
-        self.set_area_access()
-
-    def toggle_color(btn):
-        """
-        Toggles the button's background color between color1 and color2.
-        """
         colors = {'player1': '#140AB4', 'player2': '#B40A14'}
-        current_color = btn.cget("bg")
-        btn.config(bg=colors['player1'] if current_color == colors['player2'] else colors['player2'])
-        # Optionally call additional logic when clicked
-        # if cmd:
-        #     cmd()
+        self.button_end_turn.config(bg=colors[self.current_turn])
+
+        ## big step for this game
+        self.reassign_action()
+
+    def reassign_action(self):
+        opponent = 'player1' if self.current_turn == 'player2' else 'player2'
+        # set proper action for current player
+        for img_id in self.player_img_id[self.current_turn]:
+            ctrl.GameControl.action_by_card_view(self.gamestate, self.card_display_panel, img_id)
+        # disable opponent action
+        for img_id in self.player_img_id[opponent]:
+            ctrl.GameControl.action_card_disable(self.gamestate, self.card_display_panel, img_id)
+
+    def debug_action_disable(self):
+        for img_id in self.player_img_id[self.current_turn]:
+            self.card_display_panel.canvas.dtag(img_id)
+
+
 
     def setup_player_hand(self, player_key):
         """
@@ -114,6 +128,7 @@ class GameTestCase:
             # Store the (GameCard, image_id) tuple in the gamestate
             self.gamestate[player_key]['hand'][position] = (card, image_id)
             self.gamestate['img'][image_id] = card_image
+            self.player_img_id[player_key].append(image_id)
             # Optionally bind mouse events to the image on the canvas using image_id
             # self.card_display_panel.canvas.tag_bind(
             #     image_id, "<Button-1>", lambda event, img_id=image_id: ctrl.GameControl.start_drag(
@@ -162,7 +177,7 @@ class GameTestCase:
             
             self.gamestate[player_key]['deck'][deck_position].append((card, image_id))
             self.gamestate['img'][image_id] = card_image
-
+            self.player_img_id[player_key].append(image_id)
             # # Bind left-click to check card debug info
             # self.card_display_panel.canvas.tag_bind(
             #     image_id, "<Button-1>", lambda event, img_id=image_id: ctrl.GameControl.start_drag(

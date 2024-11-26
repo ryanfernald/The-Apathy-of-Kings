@@ -12,9 +12,9 @@ class GameControl:
     
     # Static method to start the drag operation
     @staticmethod
-    def start_drag(event, gamestate, canvas, image_id):
+    def start_drag(event, gamestate, glayout, image_id):
         # Record the starting point of the drag
-        GameControl.card_original_coords = canvas.coords(image_id)
+        GameControl.card_original_coords = glayout.canvas.coords(image_id)
         event.widget.start_x = event.x
         event.widget.start_y = event.y
         ### following are debug messages, delete after completion
@@ -29,43 +29,44 @@ class GameControl:
         # print('gamestate\n', gamestate)
         # debug message for game layout !!! THis debug message is now show layout upon click, not after movement
         # GameControl.display_gamestate_layout(gamestate)
-        print('movable area: ' , GameControl.get_allowed_move_area(gamestate, canvas, image_id))
-        print('attackable area: ', GameControl.get_allowed_attack_area(gamestate, canvas, image_id))
+        GameControl.action_by_card_view(gamestate, glayout, image_id)
+        print('movable area: ' , GameControl.get_allowed_move_area(gamestate, glayout.canvas, image_id))
+        print('attackable area: ', GameControl.get_allowed_attack_area(gamestate, glayout.canvas, image_id))
 
     # Static method to handle the dragging operation
     @staticmethod
-    def on_drag(event, gamestate, canvas, image_id):
+    def on_drag(event, gamestate, glayout, image_id):
         # Bring the card being dragged to the top of the stack
-        canvas.tag_raise(image_id)
+        glayout.canvas.tag_raise(image_id)
 
         # Calculate the change in position
         dx = event.x - event.widget.start_x
         dy = event.y - event.widget.start_y
 
         # Move the image by the delta
-        canvas.move(image_id, dx, dy)
+        glayout.canvas.move(image_id, dx, dy)
         #print(f'({event.widget.start_x}, {event.widget.start_y})')
         # Update the starting point to the new position
         event.widget.start_x = event.x
         event.widget.start_y = event.y
 
     @staticmethod
-    def on_release(event, gamestate, canvas, image_id):
+    def on_release(event, gamestate, glayout, image_id):
         result = GameControl.find_card_by_image_id(gamestate, image_id)
         card = result['card']
         # determin the allowed area based on the card type or player
-        area = GameControl.get_allowed_move_area(gamestate, canvas, image_id)
-        if not GameControl.location_auto_lockin(canvas, image_id, area, gamestate):
+        area = GameControl.get_allowed_move_area(gamestate, glayout.canvas, image_id)
+        if not GameControl.location_auto_lockin(glayout.canvas, image_id, area, gamestate):
             # only GameCardAtk allow to attack
-            attackable_area = GameControl.get_allowed_attack_area(gamestate, canvas, image_id)
+            attackable_area = GameControl.get_allowed_attack_area(gamestate, glayout.canvas, image_id)
             if isinstance(card, gc.GameCardAtk) & (len(attackable_area) != 0):
                 target = GameControl.find_closest_area(event.x, event.y, attackable_area)
                 if (abs(target[0] - event.x) < ggrid.GameGrid().CARD_SIZE[0] / 2) and (abs(target[1] - event.y) < ggrid.GameGrid().CARD_SIZE[1] / 2):
-                    GameControl.attack_animation(gamestate, canvas, image_id, card, target)    
+                    GameControl.attack_animation(gamestate, glayout.canvas, image_id, card, target)    
                 # to do: add method to determin which space is attack
                 # print(canvas.coords(image_id), 'being attack in function on_release')
                 # print('attack') # debug message
-            GameControl.animate_move_back(canvas, image_id, GameControl.card_original_coords)
+            GameControl.animate_move_card(glayout.canvas, image_id, GameControl.card_original_coords)
         # debug message for game layout 
         # GameControl.display_gamestate_layout(gamestate)    
 
@@ -87,6 +88,7 @@ class GameControl:
 
         # class GameCard method to identify card is currently front or back 
         card_tuple[0].flip()
+        # print('Turn card: now card is ', card_tuple[0].view)
 
         # overwrite with front image
         card_image = util.resize_image_w_bg(card_tuple[0].imgPath, ggrid.GameGrid().CARD_SIZE, player_key)
@@ -100,10 +102,11 @@ class GameControl:
         # bug: move card to hand area not last touched card spot ## solve
         # auto move card to empty hand area. ## solve, add offset to coord for this issue
         coord_offset = ((0 - ggrid.GameGrid().CARD_SIZE[0] / 2), (0 - ggrid.GameGrid().CARD_SIZE[1] / 2))
-        GameControl.animate_move_back(glayout.canvas, img_id, coord, coord_offset)
+        GameControl.animate_move_card(glayout.canvas, img_id, coord, coord_offset)
         # update gamestate
         GameControl.gamestate_update_move(gamestate, img_id, coord)
 
+        GameControl.action_card_front(gamestate, glayout, img_id)
         # # Bind mouse events for dragging using GameControl class
         # glayout.canvas.tag_bind(
         #     img_id, "<Button-1>", lambda event, img_id=img_id: GameControl.start_drag(
@@ -120,24 +123,26 @@ class GameControl:
         # # display card info on right pane
         # glayout.canvas.tag_bind(
         #     img_id, "<Button-3>", lambda event: glayout.display_card_info(card_tuple[0]))
-        GameControl.action_card_front(gamestate, glayout, img_id)
 
     @staticmethod
     def action_card_front(gamestate, glayout, image_id):
         card = GameControl.find_card_by_image_id(gamestate, image_id)['card']
+        
+        GameControl.action_card_disable(gamestate, glayout, image_id)
+
         glayout.canvas.tag_bind(
             image_id, "<Button-1>", lambda event, img_id=image_id: GameControl.start_drag(
-                event, gamestate, glayout.canvas, img_id
+                event, gamestate, glayout, img_id
             )
         )
         glayout.canvas.tag_bind(
             image_id, "<B1-Motion>", lambda event, img_id=image_id: GameControl.on_drag(
-                event, gamestate, glayout.canvas, img_id
+                event, gamestate, glayout, img_id
             )
         )
         glayout.canvas.tag_bind(
             image_id, "<ButtonRelease-1>", lambda event, img_id=image_id: GameControl.on_release(
-                event, gamestate, glayout.canvas, img_id
+                event, gamestate, glayout, img_id
             )
         )
         glayout.canvas.tag_bind(
@@ -146,12 +151,29 @@ class GameControl:
 
     @staticmethod
     def action_card_back(gamestate, glayout, image_id):
+        GameControl.action_card_disable(gamestate, glayout, image_id)
         glayout.canvas.tag_bind(
                 image_id, "<Double-Button-1>", 
                 lambda event, img_id=image_id: GameControl.turn_card(
                     event, gamestate, glayout, img_id
                     )
                 )
+    @staticmethod
+    def action_card_disable(gamestate, glayout, image_id):
+        glayout.canvas.dtag(image_id)
+
+    @staticmethod
+    def action_by_card_view(gamestate, glayout, image_id):
+        card = GameControl.find_card_by_image_id(gamestate, image_id)['card']
+        print(card.view)
+        # GameCard.view: CardView.FRONT=1, CardView.BACK=0
+        if card.view.value == 1:
+            GameControl.action_card_front(gamestate, glayout, image_id)
+        elif card.view.value == 0:
+            GameControl.action_card_back(gamestate, glayout, image_id)
+        else:
+            print('Debug: error determine card.view. This message means not front or back.')
+        
     @staticmethod
     def swtich_player_turn(current_player, gamestate, glayout):
         
@@ -253,14 +275,14 @@ class GameControl:
         return not (who == cur)
 
     @staticmethod
-    def animate_move_back(canvas, image_id, coord, coord_offset=(0, 0)):
+    def animate_move_card(canvas, image_id, coord, coord_offset=(0, 0)):
         """Animate the card moving back to its original location."""
         current_x, current_y = canvas.coords(image_id)
         target_x, target_y = coord
         target_x = target_x + coord_offset[0]
         target_y = target_y + coord_offset[1]
 
-        steps = 20  # Number of animation steps
+        steps = 10  # Number of animation steps
         dx = (target_x - current_x) / steps
         dy = (target_y - current_y) / steps
 

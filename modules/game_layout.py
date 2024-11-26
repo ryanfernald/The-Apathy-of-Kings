@@ -1,9 +1,10 @@
 import tkinter as tk
 from . import utility as util
+from . import GameGrid
 
 
 class GameLayout:
-    def __init__(self, root):
+    def __init__(self, root, game_grid):
         self.rhs_upper = (480, 720)
         # Create a canvas 
         self.canvas = tk.Canvas(root, width=980, height=960)
@@ -25,6 +26,13 @@ class GameLayout:
 
         # Keep a reference for the displayed image
         self.card_image_ref = None
+
+        # Draw the card hands, decks, and battlefields on the canvas
+        game_grid.canvas_layout(self.canvas)
+        game_grid.canvas_battlefield(self.canvas)
+        game_grid.canvas_reserve(self.canvas)
+
+
 
     def display_card_info(self, game_card):
         # Clear previous information
