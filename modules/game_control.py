@@ -160,7 +160,13 @@ class GameControl:
                 )
     @staticmethod
     def action_card_disable(gamestate, glayout, image_id):
-        glayout.canvas.dtag(image_id)
+        # disable GameCard.Front action
+        glayout.canvas.tag_unbind(image_id, "<Button-1>")
+        glayout.canvas.tag_unbind(image_id, "<B1-Motion>")
+        glayout.canvas.tag_unbind(image_id, "<ButtonRelease-1>")
+        glayout.canvas.tag_unbind(image_id, "<Button-3>")
+        # disable GameCard.Back action
+        glayout.canvas.tag_unbind(image_id, "<Double-Button-1>")
 
     @staticmethod
     def action_by_card_view(gamestate, glayout, image_id):

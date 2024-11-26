@@ -60,6 +60,7 @@ class GameTestCase:
         self.setup_player_deck('player1')
         self.setup_player_deck('player2')
 
+        self.reassign_action()
         # debug message
         # self.display_area_state()
 
@@ -115,6 +116,7 @@ class GameTestCase:
 
         for position, card in zip(hand_positions, cards):
             card.flip()
+            print('setup card in hand: ', card.view)
             card_image = util.resize_image_w_bg(imgPath=card.imgPath, coord=(size_w, size_h), player=player_key)
 
             # Add the image to the canvas and get the image_id
@@ -129,6 +131,9 @@ class GameTestCase:
             self.gamestate[player_key]['hand'][position] = (card, image_id)
             self.gamestate['img'][image_id] = card_image
             self.player_img_id[player_key].append(image_id)
+            
+            # ctrl.GameControl.action_by_card_view(self.gamestate, self.card_display_panel, image_id)
+            
             # Optionally bind mouse events to the image on the canvas using image_id
             # self.card_display_panel.canvas.tag_bind(
             #     image_id, "<Button-1>", lambda event, img_id=image_id: ctrl.GameControl.start_drag(
@@ -148,7 +153,6 @@ class GameTestCase:
             # self.card_display_panel.canvas.tag_bind(
             #     image_id, "<Button-3>", lambda event, card=card: self.card_display_panel.display_card_info(card)
             # )
-            ctrl.GameControl.action_card_front(self.gamestate, self.card_display_panel, image_id)
 
     def setup_player_deck(self, player_key):
         """
@@ -178,6 +182,9 @@ class GameTestCase:
             self.gamestate[player_key]['deck'][deck_position].append((card, image_id))
             self.gamestate['img'][image_id] = card_image
             self.player_img_id[player_key].append(image_id)
+            
+            ctrl.GameControl.action_by_card_view(self.gamestate, self.card_display_panel, image_id)
+            
             # # Bind left-click to check card debug info
             # self.card_display_panel.canvas.tag_bind(
             #     image_id, "<Button-1>", lambda event, img_id=image_id: ctrl.GameControl.start_drag(
@@ -191,7 +198,6 @@ class GameTestCase:
             #         event, self.card_display_panel, img_id, self.gamestate
             #         )
             #     )
-            ctrl.GameControl.action_card_back(self.gamestate, self.card_display_panel, image_id)
         # print(f'{player_key} deck: {len(self.state[player_key]["deck_images"])}')
 
     def display_area_state(self):
