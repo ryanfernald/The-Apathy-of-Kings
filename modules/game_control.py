@@ -87,7 +87,7 @@ class GameControl:
             return
 
         # class GameCard method to identify card is currently front or back 
-        card_tuple[0].flip()
+        card_tuple[0].view = gc.CardView.FRONT
         # print('Turn card: now card is ', card_tuple[0].view)
 
         # overwrite with front image
@@ -171,7 +171,7 @@ class GameControl:
     @staticmethod
     def action_by_card_view(gamestate, glayout, image_id):
         card = GameControl.find_card_by_image_id(gamestate, image_id)['card']
-        print(card.view)
+        # print(card.view)
         # GameCard.view: CardView.FRONT=1, CardView.BACK=0
         if card.view.value == 1:
             GameControl.action_card_front(gamestate, glayout, image_id)

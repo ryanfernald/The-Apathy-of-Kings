@@ -4,7 +4,7 @@ from . import utility as util
 from . import game_grid as ggrid
 from . import game_control as ctrl
 from . import game_layout as glayout
-
+from . import game_card as gc
 
 # test case 
 class GameTestCase:
@@ -45,7 +45,7 @@ class GameTestCase:
         # debug button
         self.game_grid1.canvas_button(
             self.card_display_panel.canvas, 
-            cmd=self.debug_action_disable,
+            cmd=self.debug_info,
             text='Debug',
             offset=(0, 80)
             )
@@ -56,8 +56,8 @@ class GameTestCase:
         self.game_grid1.display_dragons(self.card_display_panel.canvas, self.game1.info)
 
         self.setup_player_hand('player1')
-        self.setup_player_hand('player2')
         self.setup_player_deck('player1')
+        self.setup_player_hand('player2')
         self.setup_player_deck('player2')
 
         self.reassign_action()
@@ -87,15 +87,15 @@ class GameTestCase:
     def reassign_action(self):
         opponent = 'player1' if self.current_turn == 'player2' else 'player2'
         # set proper action for current player
-        for img_id in self.player_img_id[self.current_turn]:
+        for img_id in self.gamestate['img_id'][self.current_turn]:
             ctrl.GameControl.action_by_card_view(self.gamestate, self.card_display_panel, img_id)
         # disable opponent action
-        for img_id in self.player_img_id[opponent]:
+        for img_id in self.gamestate['img_id'][opponent]:
             ctrl.GameControl.action_card_disable(self.gamestate, self.card_display_panel, img_id)
 
-    def debug_action_disable(self):
-        for img_id in self.player_img_id[self.current_turn]:
-            self.card_display_panel.canvas.dtag(img_id)
+    def debug_info(self):
+        print('current: ', self.current_turn)
+        print('player_img_id: ', self.gamestate['img_id'])
 
 
 
@@ -115,8 +115,8 @@ class GameTestCase:
         size_w, size_h = self.game_grid1.CARD_SIZE
 
         for position, card in zip(hand_positions, cards):
-            card.flip()
-            print('setup card in hand: ', card.view)
+            card.view = gc.CardView.FRONT
+            # print('setup card in hand: ', card.view)
             card_image = util.resize_image_w_bg(imgPath=card.imgPath, coord=(size_w, size_h), player=player_key)
 
             # Add the image to the canvas and get the image_id
@@ -130,7 +130,7 @@ class GameTestCase:
             # Store the (GameCard, image_id) tuple in the gamestate
             self.gamestate[player_key]['hand'][position] = (card, image_id)
             self.gamestate['img'][image_id] = card_image
-            self.player_img_id[player_key].append(image_id)
+            self.gamestate['img_id'][player_key].append(image_id)
             
             # ctrl.GameControl.action_by_card_view(self.gamestate, self.card_display_panel, image_id)
             
@@ -172,6 +172,7 @@ class GameTestCase:
         card_image = self.image_back
 
         for itr, card in enumerate(cards):
+            card.view = gc.CardView.BACK
             # Add the image to the canvas, staggered to make each visible
             x_position = deck_x + int(itr / 3) * 0.5  # stack all cards in deck for better visual
             y_position = deck_y - itr * 0.5
@@ -181,7 +182,7 @@ class GameTestCase:
             
             self.gamestate[player_key]['deck'][deck_position].append((card, image_id))
             self.gamestate['img'][image_id] = card_image
-            self.player_img_id[player_key].append(image_id)
+            self.gamestate['img_id'][player_key].append(image_id)
             
             ctrl.GameControl.action_by_card_view(self.gamestate, self.card_display_panel, image_id)
             

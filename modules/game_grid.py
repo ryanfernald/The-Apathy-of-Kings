@@ -35,7 +35,7 @@ class GameGrid:
                 'atk': {position: None for position in self.PLAYER2_ATK},
                 'def': {position: None for position in self.PLAYER2_DEF}
             },
-            'index': {}, 'img': {}
+            'index': {}, 'img': {}, 'img_id': {'player1': [], 'player2': []}
         } # may be move to some other class, hard to change it.
         self.setup_index()
 
