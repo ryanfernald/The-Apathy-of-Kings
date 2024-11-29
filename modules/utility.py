@@ -4,6 +4,7 @@ from PIL import Image, ImageTk
 from . import game_card as gc
 from . import game_play as gp
 
+import platform
 
 def cur_dir():
     """
@@ -39,8 +40,16 @@ def load_cards_name_from_assets():
         as an attack card since it contains 6 attributes.
     """
     cur_dir = os.path.dirname(__file__)
-    folder_name = '\\assets\\cards\\'
+
+    # folder_name = '/assets/cards/'
+    
+    if platform.system() == 'Darwin':
+        folder_name = '/assets/cards/'
+    else: 
+        folder_name = '\\assets\\cards\\'
+
     folder_path = cur_dir + folder_name
+    # print("Folder path: " + folder_path)
     atk_cards = []
     def_cards = []
     sup_cards = []
@@ -115,7 +124,13 @@ def convert_to_sup_card(sup_cards):
 def load_card_back(card_size = (100, 150)):
     size_w, size_h = card_size
 
-    img_path = cur_dir() + '\\assets\\bin\\card_back.png'
+    # img_path = cur_dir() + '/assets/bin/card_back.png'
+    
+    if platform.system() == 'Darwin':
+        img_path = cur_dir() + '/assets/bin/card_back.png'
+    else: 
+        img_path = cur_dir() + '\\assets\\bin\\card_back.png'
+
     original_image = Image.open(img_path)
     resized_image = original_image.resize((size_w, size_h), Image.LANCZOS)
     image = ImageTk.PhotoImage(resized_image)
@@ -224,8 +239,19 @@ def load_dragons_from_assets():
     """
     # Use the directory of this script as a base path
     base_dir = os.path.abspath(os.path.dirname(__file__))
-    folder_name = 'assets\\dragons'
-    folder_path = os.path.join(base_dir, folder_name)
+
+    # print("Base dir", base_dir)
+    
+    # folder_name = '/assets/dragons'
+
+    if platform.system() == 'Darwin':
+        folder_name = '/assets/dragons'
+    else: 
+        folder_name = '\\assets\\dragon'
+
+
+    # folder_path = os.path.join(base_dir, folder_name)
+    folder_path = base_dir + folder_name
 
     # print(f"Looking for dragons in: {folder_path}")  # Debugging
 

@@ -251,7 +251,7 @@ class GameGrid:
         # Player 1's dragon
         if player1_dragon:
             name, path = player1_dragon
-            print(f"Rendering Player 1's dragon: {name} at {self.DRAGON1}")  # Debug
+            # print(f"Rendering Player 1's dragon: {name} at {self.DRAGON1}")  # Debug
             dragon_image1 = util.resize_image(path, 250, 250)
             canvas.create_image(self.DRAGON1[0], self.DRAGON1[1], image=dragon_image1, anchor="center")
             self.dragon_image1 = dragon_image1  # Store reference to avoid garbage collection
@@ -259,7 +259,7 @@ class GameGrid:
         # Player 2's dragon
         if player2_dragon:
             name, path = player2_dragon
-            print(f"Rendering Player 2's dragon: {name} at {self.DRAGON2}")  # Debug
+            # print(f"Rendering Player 2's dragon: {name} at {self.DRAGON2}")  # Debug
             dragon_image2 = util.resize_image(path, 250, 250)
             canvas.create_image(self.DRAGON2[0], self.DRAGON2[1], image=dragon_image2, anchor="center")
             self.dragon_image2 = dragon_image2  # Store reference to avoid garbage collection

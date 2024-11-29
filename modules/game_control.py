@@ -140,8 +140,13 @@ class GameControl:
                 event, gamestate, glayout.canvas, img_id
             )
         )
+        # button 3 for windows
         glayout.canvas.tag_bind(
             image_id, "<Button-3>", lambda event, card=card: glayout.display_card_info(card)
+        )
+        # button 2 for mac / linux
+        glayout.canvas.tag_bind(
+            image_id, "<Button-2>", lambda event, card=card: glayout.display_card_info(card)
         )
 
     @staticmethod
