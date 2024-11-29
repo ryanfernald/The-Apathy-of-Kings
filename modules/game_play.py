@@ -24,12 +24,12 @@ class GamePlay:
 
         # set up card for player1
         self.add_card(4, game_card_atk.copy(), self.__info['player1'])
-        self.add_card(2, game_card_def.copy(), self.__info['player1'])
-        self.add_card(1, game_card_sup.copy(), self.__info['player1'])
+        self.add_card(3, game_card_def.copy(), self.__info['player1'])
+        self.add_card(0, game_card_sup.copy(), self.__info['player1'])
         # set up card for player2
         self.add_card(4, game_card_atk.copy(), self.__info['player2'])
-        self.add_card(2, game_card_def.copy(), self.__info['player2'])
-        self.add_card(1, game_card_sup.copy(), self.__info['player2'])
+        self.add_card(3, game_card_def.copy(), self.__info['player2'])
+        self.add_card(0, game_card_sup.copy(), self.__info['player2'])
 
 
     def assign_dragons(self, dragons):
