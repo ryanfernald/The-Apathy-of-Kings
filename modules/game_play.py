@@ -37,8 +37,8 @@ class GamePlay:
         if len(dragons) < 2:
             raise ValueError("Not enough dragons available to assign to players!")
         random.shuffle(dragons)
-        self.__info['player1']['dragon'] = dragons.pop()
-        self.__info['player2']['dragon'] = dragons.pop()
+        self.__info['player1']['dragon'] = self.dragons.pop()
+        self.__info['player2']['dragon'] = self.dragons.pop()
         # print(f"Player 1 assigned dragon: {self.__info['player1']['dragon'].name}")
         # print(f"Player 2 assigned dragon: {self.__info['player2']['dragon'].name}")
 

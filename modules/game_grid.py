@@ -27,17 +27,22 @@ class GameGrid:
                 'hand': {position: None for position in self.PLAYER1_HAND},
                 'deck': {self.PLAYER1_DECK[0]: []},
                 'atk': {position: None for position in self.PLAYER1_ATK},
-                'def': {position: None for position in self.PLAYER1_DEF}
+                'def': {position: None for position in self.PLAYER1_DEF},
+                'dragon': None,
             },
             'player2': {
                 'hand': {position: None for position in self.PLAYER2_HAND},
                 'deck': {self.PLAYER2_DECK[0]: []},
                 'atk': {position: None for position in self.PLAYER2_ATK},
-                'def': {position: None for position in self.PLAYER2_DEF}
+                'def': {position: None for position in self.PLAYER2_DEF},
+                'dragon': None,
             },
             'index': {}, 'img': {}
         } # may be move to some other class, hard to change it.
         self.setup_index()
+
+        # print("Initialized Gamestate:", self.__init_state)
+
 
     @property
     def info(self):
@@ -52,9 +57,13 @@ class GameGrid:
             
             # Iterate through each area in the player's data
             for area_name, area_positions in player_data.items():
+                # Skip areas that are None or not a dictionary
+                if not isinstance(area_positions, dict):
+                    continue
                 # Add each position to the 'index' dictionary with its respective area name
                 for position in area_positions.keys():
                     self.__init_state['index'][position] = area_name
+
 
     def canvas_draw(self, canvas, x=None, y=None, fill_color='#ADD8E6'):
         if x is None and y is None:
