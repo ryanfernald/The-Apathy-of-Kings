@@ -157,6 +157,22 @@ class GameControl:
                     event, gamestate, glayout, img_id
                     )
                 )
+        
+    @staticmethod
+    def bind_dragon_interactions(canvas, dragon, layout):
+        # Debug: Check if the dragon's tag exists on the canvas
+        # tags = canvas.gettags(dragon.name)
+        # print(f"Tags for dragon {dragon.name}: {tags}")
+
+        # Bind right-click to display dragon info
+        canvas.tag_bind(
+            dragon.name, "<Button-3>", lambda event: layout.display_dragon_info(dragon),
+        )
+        canvas.tag_bind(
+            dragon.name, "<Button-2>", lambda event: layout.display_dragon_info(dragon),
+        )
+
+
     @staticmethod
     def swtich_player_turn(current_player, gamestate, glayout):
         

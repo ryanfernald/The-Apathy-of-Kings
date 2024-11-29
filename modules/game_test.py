@@ -34,6 +34,27 @@ class GameTestCase:
         self.game_grid1.canvas_battlefield(self.card_display_panel.canvas)
         self.game_grid1.canvas_reserve(self.card_display_panel.canvas)
 
+        # Get the dragons assigned to each player
+        player1_dragon = self.game1.info['player1']['dragon']
+        player2_dragon = self.game1.info['player2']['dragon']
+
+        # Display and bind interactions for Player 1's dragon
+        if player1_dragon:
+            # print(f"Adding Player 1's dragon {player1_dragon.name} to canvas and binding interactions.")
+            self.game_grid1.display_dragons(self.card_display_panel.canvas, self.game1.info)
+            ctrl.GameControl.bind_dragon_interactions(
+                self.card_display_panel.canvas, player1_dragon, self.card_display_panel
+            )
+
+        # Display and bind interactions for Player 2's dragon
+        if player2_dragon:
+            # print(f"Adding Player 2's dragon {player2_dragon.name} to canvas and binding interactions.")
+            self.game_grid1.display_dragons(self.card_display_panel.canvas, self.game1.info)
+            ctrl.GameControl.bind_dragon_interactions(
+                self.card_display_panel.canvas, player2_dragon, self.card_display_panel
+            )
+
+
         self.game_grid1.canvas_button(self.card_display_panel.canvas, cmd=lambda: self.toggle_color)
         self.game_grid1.canvas_button(
             self.card_display_panel.canvas, 

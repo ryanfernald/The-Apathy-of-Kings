@@ -1,5 +1,6 @@
 import random
 from . import utility as util
+from .utility import load_dragons_from_assets
 
 
 class GamePlay:
@@ -17,10 +18,10 @@ class GamePlay:
         game_card_sup = util.convert_to_sup_card(card_sup_list)
 
         # Load dragon data
-        dragons = util.load_dragons_from_assets()
+        self.dragons = util.load_dragons_from_assets()
         
         # Assign dragons randomly
-        self.assign_dragons(dragons)
+        self.assign_dragons(self.dragons)
 
         # set up card for player1
         self.add_card(4, game_card_atk.copy(), self.__info['player1'])
@@ -38,6 +39,8 @@ class GamePlay:
         random.shuffle(dragons)
         self.__info['player1']['dragon'] = dragons.pop()
         self.__info['player2']['dragon'] = dragons.pop()
+        # print(f"Player 1 assigned dragon: {self.__info['player1']['dragon'].name}")
+        # print(f"Player 2 assigned dragon: {self.__info['player2']['dragon'].name}")
 
         
     @property
