@@ -2,8 +2,11 @@ import os
 import tkinter as tk
 from PIL import Image, ImageTk
 from . import game_card as gc
-from . import game_play as gp
+# from . import game_play as gp
+from .game_dragon import Dragon
 
+
+import platform
 
 def cur_dir():
     """
@@ -39,8 +42,16 @@ def load_cards_name_from_assets():
         as an attack card since it contains 6 attributes.
     """
     cur_dir = os.path.dirname(__file__)
-    folder_name = '\\assets\\cards\\'
+
+    # folder_name = '/assets/cards/'
+    
+    if platform.system() == 'Darwin':
+        folder_name = '/assets/cards/'
+    else: 
+        folder_name = '\\assets\\cards\\'
+
     folder_path = cur_dir + folder_name
+    # print("Folder path: " + folder_path)
     atk_cards = []
     def_cards = []
     sup_cards = []
@@ -115,7 +126,13 @@ def convert_to_sup_card(sup_cards):
 def load_card_back(card_size = (100, 150)):
     size_w, size_h = card_size
 
-    img_path = cur_dir() + '\\assets\\bin\\card_back.png'
+    # img_path = cur_dir() + '/assets/bin/card_back.png'
+    
+    if platform.system() == 'Darwin':
+        img_path = cur_dir() + '/assets/bin/card_back.png'
+    else: 
+        img_path = cur_dir() + '\\assets\\bin\\card_back.png'
+
     original_image = Image.open(img_path)
     resized_image = original_image.resize((size_w, size_h), Image.LANCZOS)
     image = ImageTk.PhotoImage(resized_image)
@@ -214,32 +231,57 @@ def player_color(player):
         return (180, 10, 20)
     else:
         return (0, 0, 0)
+    
+
+DRAGON_PROPERTIES = {
+    "Huricana": {"element": "WATER", "defense": 5000, "hp": 5000},
+    "Ignis": {"element": "FIRE", "defense": 5000, "hp": 5000},
+    "Mountainclaw": {"element": "EARTH", "defense": 5000, "hp": 5000},
+    "Skychaser": {"element": "WIND", "defense": 5000, "hp": 5000},
+    "Voltaic": {"element": "ELECTRIC", "defense": 5000, "hp": 5000},
+}
+
 
 def load_dragons_from_assets():
     """
     Loads dragon images from the 'assets/dragons' directory.
 
     Returns:
-        list: A list of tuples with dragon names and their file paths.
+        list: A list of Dragon instances with their properties and image paths.
     """
+    # Initialize an empty list for dragons
+    dragons = []
+
     # Use the directory of this script as a base path
     base_dir = os.path.abspath(os.path.dirname(__file__))
-    folder_name = 'assets\\dragons'
-    folder_path = os.path.join(base_dir, folder_name)
 
-    # print(f"Looking for dragons in: {folder_path}")  # Debugging
+    # Define platform-specific folder path
+    if platform.system() == 'Darwin':
+        folder_name = '/assets/dragons'
+    else:
+        folder_name = '\\assets\\dragons'
 
-    dragons = []
-    for root, dirs, files in os.walk(folder_path):
+    folder_path = base_dir + folder_name
+
+    # Traverse the folder to find dragon images
+    for root, _, files in os.walk(folder_path):
         for file in files:
-            if file.lower().endswith(".png"):  # Ensure case-insensitivity
+            if file.lower().endswith(".png"):
                 dragon_name = os.path.splitext(file)[0]
-                file_path = os.path.join(root, file)
-                dragons.append((dragon_name, file_path))
+                properties = DRAGON_PROPERTIES.get(dragon_name, {})
+                if properties:
+                    dragons.append(
+                        Dragon(
+                            name=dragon_name,
+                            element=properties["element"],
+                            defense=properties["defense"],
+                            hp=properties["hp"],
+                            img_path=os.path.join(root, file),
+                        )
+                    )
 
-    # print(f"Loaded dragons: {dragons}")  # Debugging
-    
     return dragons
+
 
 # test
 if __name__ == "__main__":
@@ -254,20 +296,20 @@ if __name__ == "__main__":
     root.canvas = tk.Canvas(root, width=1000, height=960)
     root.canvas.grid(row=0, column=0, rowspan=2, padx=10, pady=10)
     
-    game1 = gp.GamePlay()
-    card1 = game1.info['player1']['hand'][0]
-    img_path = cur_dir() + '\\assets\\bin\\card_back.png'
+    # game1 = gp.GamePlay()
+    # card1 = game1.info['player1']['hand'][0]
+    # img_path = cur_dir() + '\\assets\\bin\\card_back.png'
 
-    image = resize_image(card1.imgPath, 100, 150, img_path)
-    #image = load_card_back()
-    root.canvas.create_image(70, 100, image=image, anchor="nw")
+    # image = resize_image(card1.imgPath, 100, 150, img_path)
+    # #image = load_card_back()
+    # root.canvas.create_image(70, 100, image=image, anchor="nw")
 
-    image1 = resize_image_w_bg(card1.imgPath, 100, 150)
-    root.canvas.create_image(280, 100, image=image1, anchor="nw")
+    # image1 = resize_image_w_bg(card1.imgPath, 100, 150)
+    # root.canvas.create_image(280, 100, image=image1, anchor="nw")
 
-    image2 = resize_image_w_bg(card1.imgPath,  100, 150, 'player2')
-    root.canvas.create_image(420, 100, image=image2, anchor="nw")
+    # image2 = resize_image_w_bg(card1.imgPath,  100, 150, 'player2')
+    # root.canvas.create_image(420, 100, image=image2, anchor="nw")
 
-    print('-' * 10 + ' End ' + '-' * 10)
+    # print('-' * 10 + ' End ' + '-' * 10)
 
     root.mainloop()
