@@ -1,5 +1,6 @@
 import time
 import tkinter as tk
+import tkinter.messagebox as messagebox
 from . import game_grid as ggrid
 from . import game_card as gc
 from . import utility as util
@@ -154,8 +155,13 @@ class GameControl:
                 event, gamestate, glayout, img_id
             )
         )
+        # button 3 for windows
         glayout.canvas.tag_bind(
             image_id, "<Button-3>", lambda event, card=card: glayout.display_card_info(card)
+        )
+        # button 2 for mac / linux
+        glayout.canvas.tag_bind(
+            image_id, "<Button-2>", lambda event, card=card: glayout.display_card_info(card)
         )
 
     @staticmethod
@@ -190,9 +196,18 @@ class GameControl:
             print('Debug: error determine card.view. This message means not front or back.')
         
     @staticmethod
-    def action_by_card_location(gamestate, glayout, image_id):
-        
-        return
+    def bind_dragon_interactions(canvas, dragon, layout):
+        # Debug: Check if the dragon's tag exists on the canvas
+        # tags = canvas.gettags(dragon.name)
+        # print(f"Tags for dragon {dragon.name}: {tags}")
+
+        # Bind right-click to display dragon info
+        canvas.tag_bind(
+            dragon.name, "<Button-3>", lambda event: layout.display_dragon_info(dragon),
+        )
+        canvas.tag_bind(
+            dragon.name, "<Button-2>", lambda event: layout.display_dragon_info(dragon),
+        )
 
     @staticmethod ### delete if get_allowed_move_area() fully functional
     def get_allowed_area(canvas, image_id, card, gamestate):
@@ -275,6 +290,14 @@ class GameControl:
             coord for coord, card_list in def_area.items() if card_list is not None
         ]
 
+        # Check if defense is empty; if so, include dragon coordinates
+        if GameControl.defense_empty(gamestate, opponent_key):
+            dragon_coords = GameControl.get_dragon_coords(opponent_key, ggrid.GameGrid())
+            if dragon_coords:
+                print(f"Adding dragon coordinates to attackable area: {dragon_coords}")  # Debug
+                attackable_area.append(dragon_coords)
+
+        print(f"Attackable area for {card_info['card'].name}: {attackable_area}")
         return attackable_area
 
     @staticmethod
@@ -420,7 +443,15 @@ class GameControl:
         
     @staticmethod
     def attack_animation(gamestate, canvas, image_id, card, coord):
-        """Show an animation on the canvas to represent an attack."""
+        """
+        Show an animation on the canvas to represent an attack and handle damage.
+        Args:
+            gamestate: The game state dictionary.
+            canvas: The canvas where the animation takes place.
+            image_id: The ID of the attacking card's image.
+            card: The attacking card object.
+            coord: The target coordinates being attacked.
+        """
         current_x, current_y = canvas.coords(image_id)
         target_y = current_y - 30  # Move up to represent an attack
 
@@ -492,14 +523,86 @@ class GameControl:
         
     @staticmethod
     def card_reduce_hp(gamestate, coord, attack_value):
-        # to-do: will get error if attack empty space
+        """
+        Reduce the HP of a card or dragon at the given coordinates.
+        Args:
+            gamestate: The current game state.
+            coord: The coordinates of the card or dragon being attacked.
+            attack_value: The attack value to reduce HP by.
+        Returns:
+            bool: True if the target's HP is reduced to or below 0, False otherwise.
+        """
         card = GameControl.find_card_by_coord(gamestate, coord)
-        #print(card)
-        card.hp = card.hp - attack_value
-        return True if card.hp <= 0 else False
+        if not card:
+            # Handle dragon case
+            if coord == ggrid.GameGrid().DRAGON1:
+                dragon = gamestate['player1'].get('dragon', None)
+            elif coord == ggrid.GameGrid().DRAGON2:
+                dragon = gamestate['player2'].get('dragon', None)
+            else:
+                print(f"No valid target found at {coord}.")
+                return False
+
+            if not dragon:
+                print("Error: Dragon not found in gamestate.")
+                return False
+
+            # Reduce dragon HP
+            dragon.hp -= attack_value
+            print(f"Dragon {dragon.name} HP reduced to {dragon.hp}")
+
+            # Check if the dragon is defeated
+            if dragon.hp <= 0:
+                winner = "Player 1" if coord == ggrid.GameGrid().DRAGON2 else "Player 2"
+                GameControl.display_winner(winner)
+
+            return dragon.hp <= 0
+
+        # Handle card case
+        card.hp -= attack_value
+        print(f"Card {card.name} HP reduced to {card.hp}")
+        return card.hp <= 0
+
+
+    @staticmethod
+    def display_winner(winner):
+        """
+        Display a tkinter messagebox to announce the winner and provide options to restart or quit.
+        Args:
+            winner (str): The winner's name (e.g., "Player 1" or "Player 2").
+        """
+        result = messagebox.askquestion(
+            "Game Over",
+            f"{winner} wins the game! Would you like to play again?",
+            icon="info",
+        )
+
+        if result == "yes":
+            GameControl.reset_game()
+        else:
+            import sys
+            sys.exit()
+
+    @staticmethod
+    def reset_game():
+        """
+        Reset the game to its initial state, including the board and gamestate.
+        """
+        print("Resetting the game...")
+        # Clear the game state
+        ggrid.GameGrid().reset_board()
+        # Reinitialize the game state (this may require a method in your main game logic)
+        import main  # Adjust this import if necessary
+        main.start_game()  # Assumes there's a function in your main module to start the game
+
         
     @staticmethod
     def find_card_by_coord(gamestate, coord):
+
+        # Add dragon coordinates to gamestate['index']
+        gamestate['index'][ggrid.GameGrid().DRAGON1] = 'dragon1'
+        gamestate['index'][ggrid.GameGrid().DRAGON2] = 'dragon2'
+
         area_name = gamestate['index'][coord]
         for player_key in ['player1', 'player2']:
             if area_name in gamestate[player_key]:
@@ -526,7 +629,22 @@ class GameControl:
             if image_id in gamestate['img_id'][player_key]:
                 gamestate['img_id'][player_key].remove(image_id)
         
-
+    @staticmethod
+    def get_dragon_coords(player_key, game_grid):
+        """
+        Get the dragon's coordinates based on the player key.
+        Args:
+            player_key (str): 'player1' or 'player2'.
+            game_grid (GameGrid): An instance of the game grid.
+        Returns:
+            tuple: Coordinates of the dragon for the specified player.
+        """
+        if player_key == 'player1':
+            return game_grid.DRAGON1
+        elif player_key == 'player2':
+            return game_grid.DRAGON2
+        return None
+    
     @staticmethod
     def defense_empty(gamestate, player_key):
         """
@@ -574,6 +692,8 @@ class GameControl:
             # Check if player2's defense positions are empty
             defense_empty(gamestate, 'player2')  # Output: False
         """
+        print(f"Checking if defense is empty for {player_key}: {gamestate[player_key]['def']}")
+
         for _, info in gamestate[player_key]['def'].items():
             if info != None:
                 return False

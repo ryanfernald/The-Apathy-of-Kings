@@ -26,7 +26,7 @@ class GameTestCase:
 
         # Create a dictionary to hold player data
         self.gamestate = self.game_grid1.info
-        self.player_img_id = {'player1': [], 'player2': []}
+        # self.player_img_id = {'player1': [], 'player2': []}
 
         self.current_turn = 'player1'
 
@@ -35,7 +35,33 @@ class GameTestCase:
         # self.game_grid1.canvas_battlefield(self.card_display_panel.canvas)
         # self.game_grid1.canvas_reserve(self.card_display_panel.canvas)
 
-        # show gamestate information button
+        # Assign dragons to the gamestate
+        self.gamestate['player1']['dragon'] = self.game1.info['player1']['dragon']
+        self.gamestate['player2']['dragon'] = self.game1.info['player2']['dragon']
+
+        # Add dragon coordinates to the gamestate index for lookups
+        self.gamestate['index'][self.game_grid1.DRAGON1] = 'dragon1'
+        self.gamestate['index'][self.game_grid1.DRAGON2] = 'dragon2'
+
+
+        # Display and bind interactions for Player 1's dragon
+        if self.gamestate['player1']['dragon']:
+            print(f"Adding Player 1's dragon {self.gamestate['player1']['dragon'].name} to canvas and binding interactions.")
+            self.game_grid1.display_dragons(self.card_display_panel.canvas, self.gamestate)
+            ctrl.GameControl.bind_dragon_interactions(
+                self.card_display_panel.canvas, self.gamestate['player1']['dragon'], self.card_display_panel
+            )
+
+        # Display and bind interactions for Player 2's dragon
+        if self.gamestate['player2']['dragon']:
+            print(f"Adding Player 2's dragon {self.gamestate['player2']['dragon'].name} to canvas and binding interactions.")
+            self.game_grid1.display_dragons(self.card_display_panel.canvas, self.gamestate)
+            ctrl.GameControl.bind_dragon_interactions(
+                self.card_display_panel.canvas, self.gamestate['player2']['dragon'], self.card_display_panel
+            )
+
+
+
         self.game_grid1.canvas_button(
             self.card_display_panel.canvas, 
             cmd=lambda: ctrl.GameControl.display_gamestate_layout(self.gamestate),
@@ -203,7 +229,7 @@ class GameTestCase:
         player_key (str): The player identifier ('player1' or 'player2').
         """
         
-        cards = self.game1.info[player_key]['hand'].copy()
+        cards = self.game1.info[player_key]['hand']
 
         # Get the positions for the player's hand
         hand_positions = self.game_grid1.PLAYER1_HAND if player_key == 'player1' else self.game_grid1.PLAYER2_HAND
@@ -258,7 +284,7 @@ class GameTestCase:
         player_key (str): The player identifier ('player1' or 'player2').
         """
         
-        cards = self.game1.info[player_key]['deck'].copy()
+        cards = self.game1.info[player_key]['deck']
 
         # Get the positions for the player's hand
         deck_position = self.game_grid1.PLAYER1_DECK[0] if player_key == 'player1' else self.game_grid1.PLAYER2_DECK[0]
