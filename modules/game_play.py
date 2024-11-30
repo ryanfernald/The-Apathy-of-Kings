@@ -1,5 +1,7 @@
 import random
+import copy
 from . import utility as util
+from . import game_card as gc
 
 
 class GamePlay:
@@ -23,13 +25,13 @@ class GamePlay:
         self.assign_dragons(dragons)
 
         # set up card for player1
-        self.add_card(4, game_card_atk.copy(), self.__info['player1'])
-        self.add_card(2, game_card_def.copy(), self.__info['player1'])
-        self.add_card(1, game_card_sup.copy(), self.__info['player1'])
+        self.add_card(4, copy.deepcopy(game_card_atk), self.__info['player1'])
+        self.add_card(2, copy.deepcopy(game_card_def), self.__info['player1'])
+        self.add_card(1, copy.deepcopy(game_card_sup), self.__info['player1'])
         # set up card for player2
-        self.add_card(4, game_card_atk.copy(), self.__info['player2'])
-        self.add_card(2, game_card_def.copy(), self.__info['player2'])
-        self.add_card(1, game_card_sup.copy(), self.__info['player2'])
+        self.add_card(4, copy.deepcopy(game_card_atk), self.__info['player2'])
+        self.add_card(2, copy.deepcopy(game_card_def), self.__info['player2'])
+        self.add_card(1, copy.deepcopy(game_card_sup), self.__info['player2'])
 
 
     def assign_dragons(self, dragons):
@@ -47,6 +49,7 @@ class GamePlay:
     def add_card(self, num: int, cards: list, player: dict):
         for itr in range(num):
             drawn_card = random.choice(cards)
+            drawn_card.view = gc.CardView.FRONT
             player['hand'].append(drawn_card)
             cards.remove(drawn_card)
         
