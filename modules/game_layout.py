@@ -54,3 +54,23 @@ class GameLayout:
         self.card_image_ref = card_image
         self.card_image_canvas.image = card_image
 
+    def display_dragon_info(self, dragon):
+        # Debug: Log dragon info being displayed
+        # print(f"Triggered display_dragon_info for dragon: {dragon.name}")
+        
+        # Clear previous information
+        self.card_info_text.delete(1.0, tk.END)
+        self.card_image_canvas.delete("all")
+
+        # Display dragon information
+        for line in dragon.info():
+            self.card_info_text.insert(tk.END, line + '\n')
+
+        # Load and display the dragon image
+        dragon_image = util.resize_image(dragon.img_path, 470, 470)
+        self.card_image_canvas.create_image(240, 360, anchor="center", image=dragon_image)
+
+        # Keep a reference to avoid garbage collection
+        self.card_image_ref = dragon_image
+        self.card_image_canvas.image = dragon_image
+

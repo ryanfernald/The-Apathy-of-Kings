@@ -19,12 +19,13 @@ class GamePlay:
         game_card_sup = util.convert_to_sup_card(card_sup_list)
 
         # Load dragon data
-        dragons = util.load_dragons_from_assets()
+        self.dragons = util.load_dragons_from_assets()
         
         # Assign dragons randomly
-        self.assign_dragons(dragons)
+        self.assign_dragons(self.dragons)
 
-        # set up card for player1
+        # use deepcopy to fix card.view mess because shallow copy problem
+        # set up card for player1 
         self.add_card(4, copy.deepcopy(game_card_atk), self.__info['player1'])
         self.add_card(2, copy.deepcopy(game_card_def), self.__info['player1'])
         self.add_card(1, copy.deepcopy(game_card_sup), self.__info['player1'])
@@ -38,8 +39,10 @@ class GamePlay:
         if len(dragons) < 2:
             raise ValueError("Not enough dragons available to assign to players!")
         random.shuffle(dragons)
-        self.__info['player1']['dragon'] = dragons.pop()
-        self.__info['player2']['dragon'] = dragons.pop()
+        self.__info['player1']['dragon'] = self.dragons.pop()
+        self.__info['player2']['dragon'] = self.dragons.pop()
+        # print(f"Player 1 assigned dragon: {self.__info['player1']['dragon'].name}")
+        # print(f"Player 2 assigned dragon: {self.__info['player2']['dragon'].name}")
 
         
     @property
