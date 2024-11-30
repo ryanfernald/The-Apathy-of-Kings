@@ -27,12 +27,12 @@ class GamePlay:
         # use deepcopy to fix card.view mess because shallow copy problem
         # set up card for player1 
         self.add_card(4, copy.deepcopy(game_card_atk), self.__info['player1'])
-        self.add_card(2, copy.deepcopy(game_card_def), self.__info['player1'])
-        self.add_card(1, copy.deepcopy(game_card_sup), self.__info['player1'])
+        self.add_card(3, copy.deepcopy(game_card_def), self.__info['player1'])
+        # self.add_card(1, copy.deepcopy(game_card_sup), self.__info['player1'])
         # set up card for player2
         self.add_card(4, copy.deepcopy(game_card_atk), self.__info['player2'])
-        self.add_card(2, copy.deepcopy(game_card_def), self.__info['player2'])
-        self.add_card(1, copy.deepcopy(game_card_sup), self.__info['player2'])
+        self.add_card(3, copy.deepcopy(game_card_def), self.__info['player2'])
+        # self.add_card(1, copy.deepcopy(game_card_sup), self.__info['player2'])
 
 
     def assign_dragons(self, dragons):
