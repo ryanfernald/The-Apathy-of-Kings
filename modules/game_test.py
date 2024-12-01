@@ -4,7 +4,7 @@ from . import utility as util
 from . import game_grid as ggrid
 from . import game_control as ctrl
 from . import game_layout as glayout
-
+from . import game_card as gc
 
 # test case 
 class GameTestCase:
@@ -18,7 +18,7 @@ class GameTestCase:
         self.game_grid1 = ggrid.GameGrid()
         
         # Initialize CardDisplayPanel to handle card information display
-        self.card_display_panel = glayout.GameLayout(root)
+        self.card_display_panel = glayout.GameLayout(root, self.game_grid1)
         
         # Initialize GamePlay and get card information
         self.game1 = gp.GamePlay()
@@ -26,14 +26,40 @@ class GameTestCase:
 
         # Create a dictionary to hold player data
         self.gamestate = self.game_grid1.info
-        
-        self.current_player = 'player1'
+        # self.player_img_id = {'player1': [], 'player2': []}
+
+        self.current_turn = 'player1'
 
         # Draw the card hands, decks, and battlefields on the canvas using the instance methods        
-        self.game_grid1.canvas_layout(self.card_display_panel.canvas)
-        self.game_grid1.canvas_battlefield(self.card_display_panel.canvas)
-        self.game_grid1.canvas_reserve(self.card_display_panel.canvas)
+        # self.game_grid1.canvas_layout(self.card_display_panel.canvas)
+        # self.game_grid1.canvas_battlefield(self.card_display_panel.canvas)
+        # self.game_grid1.canvas_reserve(self.card_display_panel.canvas)
 
+        # Assign dragons to the gamestate
+        self.gamestate['player1']['dragon'] = self.game1.info['player1']['dragon']
+        self.gamestate['player2']['dragon'] = self.game1.info['player2']['dragon']
+
+        # Add dragon coordinates to the gamestate index for lookups
+        self.gamestate['index'][self.game_grid1.DRAGON1] = 'dragon1'
+        self.gamestate['index'][self.game_grid1.DRAGON2] = 'dragon2'
+
+
+        # Display and bind interactions for Player 1's dragon
+        if self.gamestate['player1']['dragon']:
+            print(f"Adding Player 1's dragon {self.gamestate['player1']['dragon'].name} to canvas and binding interactions.")
+            self.game_grid1.display_dragons(self.card_display_panel.canvas, self.gamestate)
+            ctrl.GameControl.bind_dragon_interactions(
+                self.card_display_panel.canvas, self.gamestate['player1']['dragon'], self.card_display_panel
+            )
+
+        # Display and bind interactions for Player 2's dragon
+        if self.gamestate['player2']['dragon']:
+            print(f"Adding Player 2's dragon {self.gamestate['player2']['dragon'].name} to canvas and binding interactions.")
+            self.game_grid1.display_dragons(self.card_display_panel.canvas, self.gamestate)
+            ctrl.GameControl.bind_dragon_interactions(
+                self.card_display_panel.canvas, self.gamestate['player2']['dragon'], self.card_display_panel
+            )
+            
         # Assign dragons to the gamestate
         self.gamestate['player1']['dragon'] = self.game1.info['player1']['dragon']
         self.gamestate['player2']['dragon'] = self.game1.info['player2']['dragon']
@@ -62,11 +88,22 @@ class GameTestCase:
 
 
         self.game_grid1.canvas_button(self.card_display_panel.canvas, cmd=lambda: self.toggle_color)
+
+        
         self.game_grid1.canvas_button(
             self.card_display_panel.canvas, 
             cmd=lambda: ctrl.GameControl.display_gamestate_layout(self.gamestate),
             text='GameState',
             offset=(0, -80)
+            )
+        # end turn button
+        self.button_end_turn = self.game_grid1.canvas_button(self.card_display_panel.canvas, cmd=self.end_turn, color='#140AB4')
+        # debug button
+        self.game_grid1.canvas_button(
+            self.card_display_panel.canvas, 
+            cmd=self.debug_info,
+            text='Debug',
+            offset=(0, 80)
             )
 
         self.image_back = util.load_card_back(self.game_grid1.CARD_SIZE)
@@ -75,10 +112,12 @@ class GameTestCase:
         self.game_grid1.display_dragons(self.card_display_panel.canvas, self.game1.info)
 
         self.setup_player_hand('player1')
-        self.setup_player_hand('player2')
         self.setup_player_deck('player1')
+        self.setup_player_hand('player2')
         self.setup_player_deck('player2')
 
+        # self.reassign_action_by_location()
+        self.reassign_action()
         # debug message
         # self.display_area_state()
 
@@ -90,26 +129,125 @@ class GameTestCase:
 
     def end_turn(self):
         """
-        Toggles the turn and updates canvas accessibility.
+        End turn mechanism
         """
         # Switch to the other player
-        self.current_turn = 'player2' if self.current_turn == 'player1' else 'player1'
+        self.current_turn = 'player1' if self.current_turn == 'player2' else 'player2'
         print('current turn: ', self.current_turn)
         # Update the canvas to reflect the new turn
-        self.card_display_panel.canvas.delete("player1_area")
-        self.card_display_panel.canvas.delete("player2_area")
-        self.set_area_access()
-
-    def toggle_color(btn):
-        """
-        Toggles the button's background color between color1 and color2.
-        """
         colors = {'player1': '#140AB4', 'player2': '#B40A14'}
-        current_color = btn.cget("bg")
-        btn.config(bg=colors['player1'] if current_color == colors['player2'] else colors['player2'])
-        # Optionally call additional logic when clicked
-        # if cmd:
-        #     cmd()
+        self.button_end_turn.config(bg=colors[self.current_turn])
+
+        ## big step for this game
+        # self.reassign_action_by_location()
+        self.reassign_action()
+
+    def reassign_action(self):
+        opponent = 'player1' if self.current_turn == 'player2' else 'player2'
+        # set proper action for current player
+        for img_id in self.gamestate['img_id'][self.current_turn]:
+            ctrl.GameControl.action_by_card_view(self.gamestate, self.card_display_panel, img_id)
+        # disable opponent action
+        for img_id in self.gamestate['img_id'][opponent]:
+            ctrl.GameControl.action_card_disable(self.gamestate, self.card_display_panel, img_id)
+    
+    ## helper function for debug
+    def reassign_action_by_location(self):
+        '''reassign card action based on the card location'''
+        opponent = 'player1' if self.current_turn == 'player2' else 'player2'
+        for area_itr in self.gamestate[self.current_turn]:
+            if area_itr == 'deck':
+                for coord in self.gamestate[self.current_turn][area_itr]:
+                    for card_info in self.gamestate[self.current_turn][area_itr][coord]:
+                        # print(card_info[0].view, card_info[1])
+                        ctrl.GameControl.action_card_disable(self.gamestate, self.card_display_panel, card_info[1])
+                        ctrl.GameControl.action_card_back(self.gamestate, self.card_display_panel, card_info[1])
+            else:
+                for coord in self.gamestate[self.current_turn][area_itr]:
+                    if self.gamestate[self.current_turn][area_itr][coord]:
+                        # print(self.gamestate[self.current_turn][area_itr][coord][0].view, self.gamestate[self.current_turn][area_itr][coord][1])
+                        ctrl.GameControl.action_card_disable(self.gamestate, self.card_display_panel, self.gamestate[self.current_turn][area_itr][coord][1])
+                        ctrl.GameControl.action_card_front(self.gamestate, self.card_display_panel, self.gamestate[self.current_turn][area_itr][coord][1])
+        
+        print(opponent)
+        for area_itr in self.gamestate[opponent]:
+            print(area_itr)
+            if area_itr == 'deck':
+                for coord in self.gamestate[opponent][area_itr]:
+                    for card_info in self.gamestate[opponent][area_itr][coord]:
+                        # print(card_info[0].view, card_info[1])
+                        ctrl.GameControl.action_card_disable(self.gamestate, self.card_display_panel, card_info[1])
+                        ctrl.GameControl.action_card_back(self.gamestate, self.card_display_panel, card_info[1])
+            else:
+                for coord in self.gamestate[opponent][area_itr]:
+                    if self.gamestate[opponent][area_itr][coord]:
+                        # print(self.gamestate[opponent][area_itr][coord][0].view, self.gamestate[opponent][area_itr][coord][1])
+                        ctrl.GameControl.action_card_disable(self.gamestate, self.card_display_panel, self.gamestate[opponent][area_itr][coord][1])
+                        ctrl.GameControl.action_card_front(self.gamestate, self.card_display_panel, self.gamestate[opponent][area_itr][coord][1])
+    
+    ## helper function for debug
+    def card_view_correction(self):
+        opponent = 'player1' if self.current_turn == 'player2' else 'player2'
+        for area_itr in self.gamestate[self.current_turn]:
+            if area_itr == 'deck':
+                for coord in self.gamestate[self.current_turn][area_itr]:
+                    for card_info in self.gamestate[self.current_turn][area_itr][coord]:
+                        # print(card_info[0].view, card_info[1])
+                        card_info[0].view = gc.CardView.BACK
+
+            else:
+                for coord in self.gamestate[self.current_turn][area_itr]:
+                    if self.gamestate[self.current_turn][area_itr][coord]:
+                        # print(self.gamestate[self.current_turn][area_itr][coord][0].view, self.gamestate[self.current_turn][area_itr][coord][1])
+                        self.gamestate[self.current_turn][area_itr][coord][0].view = gc.CardView.FRONT
+        
+        for area_itr in self.gamestate[opponent]:
+            if area_itr == 'deck':
+                for coord in self.gamestate[opponent][area_itr]:
+                    for card_info in self.gamestate[opponent][area_itr][coord]:
+                        # print(card_info[0].view, card_info[1])
+                        card_info[0].view = gc.CardView.BACK
+            else:
+                for coord in self.gamestate[opponent][area_itr]:
+                    if self.gamestate[opponent][area_itr][coord]:
+                        # print(self.gamestate[opponent][area_itr][coord][0].view, self.gamestate[opponent][area_itr][coord][1])
+                        self.gamestate[opponent][area_itr][coord][0].view = gc.CardView.FRONT
+
+    ## helper function for debug
+    def debug_display_card_info(self):
+        opponent = 'player1' if self.current_turn == 'player2' else 'player2'
+        print(self.current_turn)
+        for area_itr in self.gamestate[self.current_turn]:
+            print(area_itr)
+            if area_itr == 'deck':
+                for coord in self.gamestate[self.current_turn][area_itr]:
+                    print(type(self.gamestate[self.current_turn][area_itr][coord]))
+                    for card_info in self.gamestate[self.current_turn][area_itr][coord]:
+                        print(card_info[0].view, card_info[1])
+            else:
+                for coord in self.gamestate[self.current_turn][area_itr]:
+                    if self.gamestate[self.current_turn][area_itr][coord]:
+                        print(self.gamestate[self.current_turn][area_itr][coord][0].view, self.gamestate[self.current_turn][area_itr][coord][1])
+        
+        print(opponent)
+        for area_itr in self.gamestate[opponent]:
+            print(area_itr)
+            if area_itr == 'deck':
+                for coord in self.gamestate[opponent][area_itr]:
+                    for card_info in self.gamestate[opponent][area_itr][coord]:
+                        print(card_info[0].view, card_info[1])
+            else:
+                for coord in self.gamestate[opponent][area_itr]:
+                    if self.gamestate[opponent][area_itr][coord]:
+                        print(self.gamestate[opponent][area_itr][coord][0].view, self.gamestate[opponent][area_itr][coord][1])
+        
+
+    def debug_info(self):
+        print('current: ', self.current_turn)
+        # print('player_img_id: ', self.gamestate['img_id'])
+        self.debug_display_card_info()
+
+
 
     def setup_player_hand(self, player_key):
         """
@@ -127,7 +265,8 @@ class GameTestCase:
         size_w, size_h = self.game_grid1.CARD_SIZE
 
         for position, card in zip(hand_positions, cards):
-            card.flip()
+            card.view = gc.CardView.FRONT
+            # print('setup card in hand: ', card.view)
             card_image = util.resize_image_w_bg(imgPath=card.imgPath, coord=(size_w, size_h), player=player_key)
 
             # Add the image to the canvas and get the image_id
@@ -141,6 +280,10 @@ class GameTestCase:
             # Store the (GameCard, image_id) tuple in the gamestate
             self.gamestate[player_key]['hand'][position] = (card, image_id)
             self.gamestate['img'][image_id] = card_image
+            self.gamestate['img_id'][player_key].append(image_id)
+            # print(player_key, ' hand: ', self.gamestate[player_key]['hand'][position][0].view)
+            # ctrl.GameControl.action_by_card_view(self.gamestate, self.card_display_panel, image_id)
+            
             # Optionally bind mouse events to the image on the canvas using image_id
             # self.card_display_panel.canvas.tag_bind(
             #     image_id, "<Button-1>", lambda event, img_id=image_id: ctrl.GameControl.start_drag(
@@ -157,10 +300,12 @@ class GameTestCase:
             #         event, self.card_display_panel.canvas, img_id, self.gamestate
             #     )
             # )
-            # self.card_display_panel.canvas.tag_bind(
-            #     image_id, "<Button-3>", lambda event, card=card: self.card_display_panel.display_card_info(card)
-            # )
-            ctrl.GameControl.action_card_front(self.gamestate, self.card_display_panel, image_id)
+            self.card_display_panel.canvas.tag_bind(
+                image_id, "<Button-3>", lambda event, card=card: self.card_display_panel.display_card_info(card)
+            )
+            self.card_display_panel.canvas.tag_bind(
+                image_id, "<Button-2>", lambda event, card=card: self.card_display_panel.display_card_info(card)
+            )
 
     def setup_player_deck(self, player_key):
         """
@@ -180,6 +325,7 @@ class GameTestCase:
         card_image = self.image_back
 
         for itr, card in enumerate(cards):
+            card.view = gc.CardView.BACK
             # Add the image to the canvas, staggered to make each visible
             x_position = deck_x + int(itr / 3) * 0.5  # stack all cards in deck for better visual
             y_position = deck_y - itr * 0.5
@@ -189,7 +335,10 @@ class GameTestCase:
             
             self.gamestate[player_key]['deck'][deck_position].append((card, image_id))
             self.gamestate['img'][image_id] = card_image
-
+            self.gamestate['img_id'][player_key].append(image_id)
+            
+            ctrl.GameControl.action_by_card_view(self.gamestate, self.card_display_panel, image_id)
+            
             # # Bind left-click to check card debug info
             # self.card_display_panel.canvas.tag_bind(
             #     image_id, "<Button-1>", lambda event, img_id=image_id: ctrl.GameControl.start_drag(
@@ -203,7 +352,6 @@ class GameTestCase:
             #         event, self.card_display_panel, img_id, self.gamestate
             #         )
             #     )
-            ctrl.GameControl.action_card_back(self.gamestate, self.card_display_panel, image_id)
         # print(f'{player_key} deck: {len(self.state[player_key]["deck_images"])}')
 
     def display_area_state(self):
@@ -297,7 +445,26 @@ class GameTestCase:
 
         print("\n--- End of Game State Layout ---\n")
 
-    
+    def debug_gamestate(self):
+        """
+        Displays the count of cards for each player in each area of the gamestate.
+
+        Args:
+            gamestate (dict): The gamestate dictionary.
+        """
+        for player in ['player1', 'player2']:
+            print(f"Card counts for {player}:")
+            player_data = self.gamestate.get(player, {})
+            for area in ['hand', 'deck', 'atk', 'def']:
+                area_data = player_data.get(area, {})
+                if area == 'deck':
+                    # Deck contains a list of (card, img_id) tuples
+                    count = len(area_data)
+                else:
+                    # Other areas contain a single (card, img_id) tuple per coordinate
+                    count = len(area_data)
+                print(f"  {area.capitalize()}: {count} cards")
+            print()    
 
 if __name__ == "__main__":
     

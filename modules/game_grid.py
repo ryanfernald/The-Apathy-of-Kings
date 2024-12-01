@@ -37,7 +37,7 @@ class GameGrid:
                 'def': {position: None for position in self.PLAYER2_DEF},
                 'dragon': None,
             },
-            'index': {}, 'img': {}
+            'index': {}, 'img': {}, 'img_id': {'player1': [], 'player2': []}
         } # may be move to some other class, hard to change it.
         self.setup_index()
 
@@ -213,7 +213,7 @@ class GameGrid:
                             print(f"    Deck at position {position}: Empty")
         print("--- End of Area State ---\n")
 
-    def canvas_button(self, canvas, cmd=None ,text='End Turn', offset=(0, 0), width=100, height=50):
+    def canvas_button(self, canvas, cmd=None ,text='End Turn', offset=(0, 0), color='#2980B9', width=100, height=50):
         """
         Creates a button for end turn.
         """
@@ -232,7 +232,7 @@ class GameGrid:
             command=cmd,
             font=("Helvetica", 12, "bold"),
             fg="white",  # Text color
-            bg="#2980B9",  # Background color
+            bg=color,  # Background color
             activeforeground="white",  # Text color on hover
             activebackground="#3498DB",  # Background color on hover
             relief="raised",  # Button relief style
@@ -245,6 +245,8 @@ class GameGrid:
 
         # Add the frame to the canvas
         canvas.create_window(x, y, window=button_frame)
+
+        return button
     
     def display_dragons(self, canvas, gamestate):
         # Get dragon objects from gamestate

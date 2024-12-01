@@ -7,7 +7,7 @@ class GameCard:
         self.__name = argName   # card name
         self.__type = CardType(argType)   # card type: attack card/ defense card/ support card
         self.__imgPath = argPath
-        self.__view = CardView(0)
+        self.__view = CardView.BACK
     
     @property
     def name(self):
