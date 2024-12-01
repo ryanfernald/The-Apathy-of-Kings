@@ -59,9 +59,37 @@ class GameTestCase:
             ctrl.GameControl.bind_dragon_interactions(
                 self.card_display_panel.canvas, self.gamestate['player2']['dragon'], self.card_display_panel
             )
+            
+        # Assign dragons to the gamestate
+        self.gamestate['player1']['dragon'] = self.game1.info['player1']['dragon']
+        self.gamestate['player2']['dragon'] = self.game1.info['player2']['dragon']
+
+        # Add dragon coordinates to the gamestate index for lookups
+        self.gamestate['index'][self.game_grid1.DRAGON1] = 'dragon1'
+        self.gamestate['index'][self.game_grid1.DRAGON2] = 'dragon2'
+
+
+        # Display and bind interactions for Player 1's dragon
+        if self.gamestate['player1']['dragon']:
+            print(f"Adding Player 1's dragon {self.gamestate['player1']['dragon'].name} to canvas and binding interactions.")
+            self.game_grid1.display_dragons(self.card_display_panel.canvas, self.gamestate)
+            ctrl.GameControl.bind_dragon_interactions(
+                self.card_display_panel.canvas, self.gamestate['player1']['dragon'], self.card_display_panel
+            )
+
+        # Display and bind interactions for Player 2's dragon
+        if self.gamestate['player2']['dragon']:
+            print(f"Adding Player 2's dragon {self.gamestate['player2']['dragon'].name} to canvas and binding interactions.")
+            self.game_grid1.display_dragons(self.card_display_panel.canvas, self.gamestate)
+            ctrl.GameControl.bind_dragon_interactions(
+                self.card_display_panel.canvas, self.gamestate['player2']['dragon'], self.card_display_panel
+            )
 
 
 
+        self.game_grid1.canvas_button(self.card_display_panel.canvas, cmd=lambda: self.toggle_color)
+
+        
         self.game_grid1.canvas_button(
             self.card_display_panel.canvas, 
             cmd=lambda: ctrl.GameControl.display_gamestate_layout(self.gamestate),

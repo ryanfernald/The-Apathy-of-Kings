@@ -54,11 +54,18 @@ class GameControl:
 
     @staticmethod
     def on_release(event, gamestate, glayout, image_id):
+    
+    
         card_info = GameControl.find_card_by_image_id(gamestate, image_id)
         card = card_info['card']
         cur_area = card_info['area']
+        
+        
         # determin the allowed area based on the card type or player
         area = GameControl.get_allowed_move_area(gamestate, glayout.canvas, image_id)
+        
+        
+        
         if cur_area == 'deck':
             print(f'move {image_id} to {area[0]}')
             coord_offset = ((0 - ggrid.GameGrid().CARD_SIZE[0] / 2), (0 - ggrid.GameGrid().CARD_SIZE[1] / 2))
@@ -173,6 +180,22 @@ class GameControl:
                     event, gamestate, glayout, img_id
                     )
                 )
+        
+    @staticmethod
+    def bind_dragon_interactions(canvas, dragon, layout):
+        # Debug: Check if the dragon's tag exists on the canvas
+        # tags = canvas.gettags(dragon.name)
+        # print(f"Tags for dragon {dragon.name}: {tags}")
+
+        # Bind right-click to display dragon info
+        canvas.tag_bind(
+            dragon.name, "<Button-3>", lambda event: layout.display_dragon_info(dragon),
+        )
+        canvas.tag_bind(
+            dragon.name, "<Button-2>", lambda event: layout.display_dragon_info(dragon),
+        )
+
+
     @staticmethod
     def action_card_disable(gamestate, glayout, image_id):
         # disable GameCard.Front action
@@ -270,10 +293,12 @@ class GameControl:
     def get_allowed_attack_area(gamestate, canvas, image_id):
         card_info = GameControl.find_card_by_image_id(gamestate, image_id)
         if not card_info:
-            # if card_info is None, that means that program have logic error
-            return [] # If card_info is None, return an empty list
+            # If card_info is None, return an empty list
+            return []
+
         if card_info['area'] == 'hand':
-            return [] # card can not attack if it is in hand area
+            # Cards in hand cannot attack
+            return []
 
         # Determine the current player key and opponent player key
         player_key = card_info['player']
@@ -299,6 +324,7 @@ class GameControl:
 
         print(f"Attackable area for {card_info['card'].name}: {attackable_area}")
         return attackable_area
+
 
     @staticmethod
     def card_current_area(card_coords):
@@ -469,7 +495,15 @@ class GameControl:
             canvas.move(image_id, 0, -dy)
             canvas.update()
             time.sleep(0.02)
+
+        # Handle damage animation
         GameControl.animation_damage(gamestate, canvas, image_id, card, coord)
+
+        # Move the card back to its original location
+        GameControl.animate_move_back(canvas, image_id, GameControl.card_original_coords)
+
+        print(f"Starting attack animation for {card.name} on {coord}")
+
 
     ## to do: make attack effect
     @staticmethod
@@ -644,7 +678,7 @@ class GameControl:
         elif player_key == 'player2':
             return game_grid.DRAGON2
         return None
-    
+
     @staticmethod
     def defense_empty(gamestate, player_key):
         """
@@ -693,6 +727,7 @@ class GameControl:
             defense_empty(gamestate, 'player2')  # Output: False
         """
         print(f"Checking if defense is empty for {player_key}: {gamestate[player_key]['def']}")
+
 
         for _, info in gamestate[player_key]['def'].items():
             if info != None:

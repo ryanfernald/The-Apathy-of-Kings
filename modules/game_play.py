@@ -1,7 +1,9 @@
 import random
 import copy
 from . import utility as util
+
 from . import game_card as gc
+from .utility import load_dragons_from_assets
 
 
 class GamePlay:
@@ -33,6 +35,7 @@ class GamePlay:
         self.add_card(4, copy.deepcopy(game_card_atk), self.__info['player2'])
         self.add_card(3, copy.deepcopy(game_card_def), self.__info['player2'])
         # self.add_card(1, copy.deepcopy(game_card_sup), self.__info['player2'])
+
 
 
     def assign_dragons(self, dragons):
