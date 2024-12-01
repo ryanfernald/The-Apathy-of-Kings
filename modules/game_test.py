@@ -275,6 +275,9 @@ class GameTestCase:
             self.card_display_panel.canvas.tag_bind(
                 image_id, "<Button-3>", lambda event, card=card: self.card_display_panel.display_card_info(card)
             )
+            self.card_display_panel.canvas.tag_bind(
+                image_id, "<Button-2>", lambda event, card=card: self.card_display_panel.display_card_info(card)
+            )
 
     def setup_player_deck(self, player_key):
         """
