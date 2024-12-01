@@ -90,21 +90,23 @@ class GameTestCase:
         self.game_grid1.canvas_button(self.card_display_panel.canvas, cmd=lambda: self.toggle_color)
 
         
-        self.game_grid1.canvas_button(
-            self.card_display_panel.canvas, 
-            cmd=lambda: ctrl.GameControl.display_gamestate_layout(self.gamestate),
-            text='GameState',
-            offset=(0, -80)
-            )
+        # self.game_grid1.canvas_button(
+        #     self.card_display_panel.canvas, 
+        #     cmd=lambda: ctrl.GameControl.display_gamestate_layout(self.gamestate),
+        #     text='GameState',
+        #     offset=(0, -80)
+        #     )
+
         # end turn button
         self.button_end_turn = self.game_grid1.canvas_button(self.card_display_panel.canvas, cmd=self.end_turn, color='#140AB4')
+        
         # debug button
-        self.game_grid1.canvas_button(
-            self.card_display_panel.canvas, 
-            cmd=self.debug_info,
-            text='Debug',
-            offset=(0, 80)
-            )
+        # self.game_grid1.canvas_button(
+        #     self.card_display_panel.canvas, 
+        #     cmd=self.debug_info,
+        #     text='Debug',
+        #     offset=(0, 80)
+        #     )
 
         self.image_back = util.load_card_back(self.game_grid1.CARD_SIZE)
 

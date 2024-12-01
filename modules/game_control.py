@@ -55,16 +55,12 @@ class GameControl:
     @staticmethod
     def on_release(event, gamestate, glayout, image_id):
     
-    
         card_info = GameControl.find_card_by_image_id(gamestate, image_id)
         card = card_info['card']
         cur_area = card_info['area']
-        
-        
+
         # determin the allowed area based on the card type or player
         area = GameControl.get_allowed_move_area(gamestate, glayout.canvas, image_id)
-        
-        
         
         if cur_area == 'deck':
             print(f'move {image_id} to {area[0]}')
@@ -500,7 +496,7 @@ class GameControl:
         GameControl.animation_damage(gamestate, canvas, image_id, card, coord)
 
         # Move the card back to its original location
-        GameControl.animate_move_back(canvas, image_id, GameControl.card_original_coords)
+        GameControl.animate_move_card(canvas, image_id, GameControl.card_original_coords)
 
         print(f"Starting attack animation for {card.name} on {coord}")
 
