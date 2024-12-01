@@ -25,7 +25,7 @@ from .game_layout import GameLayout
 from .game_play import GamePlay
 
 # Importing GameTestCase class from game_test module
-from .game_test import GameTestCase
+from .game_test import TheApathyofKings
 
 # Importing utility functions from utility module
 from .utility import (
@@ -54,7 +54,7 @@ __all__ = [
     "GameGrid",
     "GameLayout",
     "GamePlay",
-    "GameTestCase",
+    "TheApathyofKings",
     "cur_dir",
     "load_cards_name_from_assets",
     "display_card_list",

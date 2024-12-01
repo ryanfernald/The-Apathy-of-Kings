@@ -5,5 +5,5 @@ from modules import *
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = GameTestCase(root)
+    app = TheApathyofKings(root)
     root.mainloop()

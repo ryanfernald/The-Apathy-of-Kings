@@ -232,7 +232,7 @@ class GameGrid:
             text=text,
             command=cmd,
             font=("Helvetica", 12, "bold"),
-            fg="white",  # Text color
+            fg="black",  # Text color
             bg=color,  # Background color
             activeforeground="white",  # Text color on hover
             activebackground="#3498DB",  # Background color on hover

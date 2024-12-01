@@ -7,11 +7,11 @@ from . import game_layout as glayout
 from . import game_card as gc
 
 # test case 
-class GameTestCase:
+class TheApathyofKings:
     def __init__(self, root):
         self.top, self.bottom = 0, 960
         self.root = root
-        self.root.title('Image Display Test')
+        self.root.title('The Apathy of Kings')
         self.root.geometry(f"1500x{self.bottom}")
         
         # Create an instance of GameGrid
@@ -471,7 +471,7 @@ class GameTestCase:
 if __name__ == "__main__":
     
     root = tk.Tk()
-    app = GameTestCase(root)
+    app = TheApathyofKings(root)
     root.mainloop()
 
 
