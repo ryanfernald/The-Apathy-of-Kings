@@ -46,7 +46,7 @@ class TheApathyofKings:
 
         # Display and bind interactions for Player 1's dragon
         if self.gamestate['player1']['dragon']:
-            print(f"Adding Player 1's dragon {self.gamestate['player1']['dragon'].name} to canvas and binding interactions.")
+            # print(f"Adding Player 1's dragon {self.gamestate['player1']['dragon'].name} to canvas and binding interactions.")
             self.game_grid1.display_dragons(self.card_display_panel.canvas, self.gamestate)
             ctrl.GameControl.bind_dragon_interactions(
                 self.card_display_panel.canvas, self.gamestate['player1']['dragon'], self.card_display_panel
@@ -54,7 +54,7 @@ class TheApathyofKings:
 
         # Display and bind interactions for Player 2's dragon
         if self.gamestate['player2']['dragon']:
-            print(f"Adding Player 2's dragon {self.gamestate['player2']['dragon'].name} to canvas and binding interactions.")
+            # print(f"Adding Player 2's dragon {self.gamestate['player2']['dragon'].name} to canvas and binding interactions.")
             self.game_grid1.display_dragons(self.card_display_panel.canvas, self.gamestate)
             ctrl.GameControl.bind_dragon_interactions(
                 self.card_display_panel.canvas, self.gamestate['player2']['dragon'], self.card_display_panel
@@ -71,7 +71,7 @@ class TheApathyofKings:
 
         # Display and bind interactions for Player 1's dragon
         if self.gamestate['player1']['dragon']:
-            print(f"Adding Player 1's dragon {self.gamestate['player1']['dragon'].name} to canvas and binding interactions.")
+            # print(f"Adding Player 1's dragon {self.gamestate['player1']['dragon'].name} to canvas and binding interactions.")
             self.game_grid1.display_dragons(self.card_display_panel.canvas, self.gamestate)
             ctrl.GameControl.bind_dragon_interactions(
                 self.card_display_panel.canvas, self.gamestate['player1']['dragon'], self.card_display_panel
@@ -79,7 +79,7 @@ class TheApathyofKings:
 
         # Display and bind interactions for Player 2's dragon
         if self.gamestate['player2']['dragon']:
-            print(f"Adding Player 2's dragon {self.gamestate['player2']['dragon'].name} to canvas and binding interactions.")
+            # print(f"Adding Player 2's dragon {self.gamestate['player2']['dragon'].name} to canvas and binding interactions.")
             self.game_grid1.display_dragons(self.card_display_panel.canvas, self.gamestate)
             ctrl.GameControl.bind_dragon_interactions(
                 self.card_display_panel.canvas, self.gamestate['player2']['dragon'], self.card_display_panel
@@ -137,8 +137,11 @@ class TheApathyofKings:
         self.current_turn = 'player1' if self.current_turn == 'player2' else 'player2'
         print('current turn: ', self.current_turn)
         # Update the canvas to reflect the new turn
-        colors = {'player1': '#140AB4', 'player2': '#B40A14'}
-        self.button_end_turn.config(bg=colors[self.current_turn])
+        colors = {'player1': '#382df3', 'player2': '#f32d38'}
+        self.button_end_turn.config(
+            bg=colors[self.current_turn],
+            text=f"End {self.current_turn.capitalize()}'s Turn"  # Dynamically update text
+        )
 
         ## big step for this game
         # self.reassign_action_by_location()

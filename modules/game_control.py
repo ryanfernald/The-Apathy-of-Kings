@@ -315,7 +315,7 @@ class GameControl:
         if GameControl.defense_empty(gamestate, opponent_key):
             dragon_coords = GameControl.get_dragon_coords(opponent_key, ggrid.GameGrid())
             if dragon_coords:
-                print(f"Adding dragon coordinates to attackable area: {dragon_coords}")  # Debug
+                 # print(f"Adding dragon coordinates to attackable area: {dragon_coords}")  # Debug
                 attackable_area.append(dragon_coords)
 
         print(f"Attackable area for {card_info['card'].name}: {attackable_area}")

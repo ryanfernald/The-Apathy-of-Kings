@@ -1,6 +1,7 @@
 import tkinter as tk
 from . import utility as util
 from . import GameGrid
+import random
 
 
 class GameLayout:
@@ -23,7 +24,7 @@ class GameLayout:
         # Add text widget to display card information (right hand side, bottom section)
         self.card_info_text = tk.Text(self.card_display_frame, height=10, width=60)
         self.card_info_text.pack()
-
+        self.coin_flip()
         # Keep a reference for the displayed image
         self.card_image_ref = None
 
@@ -73,4 +74,15 @@ class GameLayout:
         # Keep a reference to avoid garbage collection
         self.card_image_ref = dragon_image
         self.card_image_canvas.image = dragon_image
+    
+    def coin_flip(self):
+        """
+        Simulate a coin flip to determine who attacks first and display the result in card_info_text.
+        """
+        winner = random.choice(["Player 1", "Player 2"])
+        self.card_info_text.delete(1.0, tk.END)  # Clear previous text
+        self.card_info_text.insert(
+            tk.END, f"{winner} has won the coin flip and gets to attack first."
+        )
+        print(f"Coin flip result: {winner} has won.")
 
